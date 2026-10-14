@@ -59,6 +59,9 @@
 }
 
 .rc-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* ≥44px tap target */
   color: rgba(244, 254, 255, 0.75);
   text-decoration: none;
   font-weight: 600;
@@ -72,6 +75,9 @@
 
 /* nav CTA is GHOST — the single primary per screen lives in the hero (§6) */
 .rc-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* ≥44px tap target */
   color: var(--rc-accent);
   border: 1.5px solid rgba(53, 224, 255, 0.55);
   text-decoration: none;

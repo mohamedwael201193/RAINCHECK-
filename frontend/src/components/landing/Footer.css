@@ -1,0 +1,158 @@
+/* RAINCHECK footer — navy, editorial. Tokens: #0B1220 · #35E0FF · #F4EFE6. */
+
+.rc-footer {
+  background: #0b1220;
+  color: #f4efe6;
+  padding: clamp(64px, 8vw, 96px) 24px 40px;
+  border-top: 1px solid rgba(244, 254, 255, 0.08);
+}
+
+.rc-footer-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.rc-footer-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(244, 254, 255, 0.12);
+}
+
+.rc-footer-brand {
+  max-width: 440px;
+}
+
+.rc-footer-wordmark {
+  font-family: "Archivo Black", Inter, system-ui;
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+  color: #f4feff;
+}
+
+.rc-footer-dot {
+  color: #35e0ff;
+}
+
+.rc-footer-tag {
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: rgba(244, 254, 255, 0.68);
+  margin: 0;
+}
+
+.rc-footer-tokens {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(244, 254, 255, 0.6);
+}
+
+.rc-footer-tokens img {
+  border-radius: 50%;
+}
+
+.rc-footer-tokens span:last-child {
+  margin-left: 4px;
+}
+
+.rc-footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.rc-footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #f4feff;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.9;
+  transition: color 0.2s ease;
+}
+
+.rc-footer-link:hover {
+  color: #35e0ff;
+}
+
+.rc-footer-ext {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.rc-footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 28px;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: rgba(244, 254, 255, 0.5);
+}
+
+.rc-footer-contracts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.rc-footer-contracts-label {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: rgba(244, 254, 255, 0.45);
+}
+
+.rc-footer-contract {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rc-footer-contract img {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rc-footer-addr {
+  color: rgba(244, 254, 255, 0.75);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: break-all;
+  transition: color 0.2s ease;
+}
+
+.rc-footer-addr:hover {
+  color: #35e0ff;
+}
+
+.rc-footer-signoff {
+  align-self: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-footer-link,
+  .rc-footer-addr {
+    transition: none;
+  }
+}

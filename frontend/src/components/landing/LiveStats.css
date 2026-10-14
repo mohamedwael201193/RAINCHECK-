@@ -1,0 +1,102 @@
+/* RAINCHECK LiveStats — dark ledger strip continuing the hero's navy act.
+   Real on-chain values only; the section hides itself when the API is
+   unreachable (logic in tsx). Tokens: #0B1220 · #35E0FF · #F4EFE6. */
+
+.rc-stats {
+  background: #0b1220;
+  color: #f4feff;
+  padding: clamp(64px, 9vw, 112px) 24px;
+  border-top: 1px solid rgba(244, 254, 255, 0.08);
+}
+
+.rc-stats-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.rc-stats .rc-section-title {
+  color: #f4feff;
+}
+
+/* dark-variant eyebrow: cyan on navy (HowItWorks.css defines the paper variant) */
+.rc-stats .rc-eyebrow {
+  background: rgba(53, 224, 255, 0.08);
+  border: 1px solid rgba(53, 224, 255, 0.35);
+  color: #35e0ff;
+}
+
+.rc-stats .rc-parenthetical {
+  color: rgba(244, 254, 255, 0.55);
+}
+
+.rc-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 32px;
+  margin-top: 56px;
+}
+
+.rc-stat {
+  border-top: 2px solid rgba(244, 254, 255, 0.28);
+  padding-top: 18px;
+}
+
+.rc-stat-value {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #f4feff;
+}
+
+.rc-stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  color: rgba(244, 254, 255, 0.55);
+}
+
+.rc-stat-label img {
+  border-radius: 50%;
+}
+
+.rc-stat-skeleton {
+  height: 58px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(244, 254, 255, 0.06) 25%,
+    rgba(244, 254, 255, 0.14) 50%,
+    rgba(244, 254, 255, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: rc-shimmer 1.4s infinite;
+}
+
+@keyframes rc-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.rc-stats-note {
+  margin: 48px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(244, 254, 255, 0.5);
+  max-width: 72ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-stat-skeleton {
+    animation: none;
+  }
+}

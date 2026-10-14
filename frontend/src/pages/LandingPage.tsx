@@ -9,12 +9,13 @@ import {
 import "./LandingPage.css";
 
 /**
- * RAINCHECK landing page — DESIGN STANDARD (Phase A).
- * One continuous vertical scroll (§2). Hero order per §3:
- *   brand mark → ambient visual → marquee → headline → CTA row → live-stats row.
- * The live-stats row is the sibling <LiveStats/> band mounted directly after
- * the hero: real on-chain values only; the section hides itself when the API
- * is unreachable — never faked (§3, §10).
+ * RAINCHECK landing page — premium editorial composition.
+ * One continuous vertical scroll. Hero: /hero-v2.png art bled full-bleed
+ * behind the section with type over the art's empty left third, then
+ * eyebrow → headline → parenthetical → subline → token strip → CTA row →
+ * marquee ticker. The live-stats band is the sibling <LiveStats/> section
+ * mounted directly after the hero: real on-chain values only; the section
+ * hides itself when the API is unreachable — never faked.
  *
  * Lazy-loaded by src/App.tsx via React.lazy (keep this module side-effect free
  * apart from the CSS import).

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-
-const INK = '#0B1220';
-const PAPER = '#F4EFE6';
-const GREEN = '#35E0FF';
+import TokenIcon from "../TokenIcon";
+import Reveal from "./Reveal";
+import './LiveStats.css';
 
 type Stats = {
   totalReceipts: number;
@@ -15,34 +14,12 @@ type Phase = 'loading' | 'ready' | 'hidden';
 
 const FETCH_TIMEOUT_MS = 8000;
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
-    <div
-      style={{
-        borderTop: `3px solid ${INK}`,
-        paddingTop: 18,
-      }}
-    >
-      <div
-        style={{
-          fontSize: 'clamp(40px, 5vw, 64px)',
-          fontWeight: 800,
-          letterSpacing: '-0.03em',
-          lineHeight: 1,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {value}
-      </div>
-      <div
-        style={{
-          marginTop: 10,
-          fontSize: 12,
-          letterSpacing: '0.22em',
-          fontWeight: 700,
-          opacity: 0.6,
-        }}
-      >
+    <div className="rc-stat">
+      <div className="rc-stat-value">{value}</div>
+      <div className="rc-stat-label">
+        {icon}
         {label}
       </div>
     </div>
@@ -51,28 +28,9 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 function SkeletonCard({ label }: { label: string }) {
   return (
-    <div style={{ borderTop: `3px solid ${INK}`, paddingTop: 18 }}>
-      <div
-        aria-hidden="true"
-        style={{
-          height: 58,
-          borderRadius: 8,
-          background: `linear-gradient(90deg, ${INK}14 25%, ${INK}2e 50%, ${INK}14 75%)`,
-          backgroundSize: '200% 100%',
-          animation: 'rc-shimmer 1.4s infinite',
-        }}
-      />
-      <div
-        style={{
-          marginTop: 10,
-          fontSize: 12,
-          letterSpacing: '0.22em',
-          fontWeight: 700,
-          opacity: 0.6,
-        }}
-      >
-        {label}
-      </div>
+    <div className="rc-stat">
+      <div aria-hidden="true" className="rc-stat-skeleton" />
+      <div className="rc-stat-label">{label}</div>
     </div>
   );
 }
@@ -159,43 +117,20 @@ export default function LiveStats() {
   return (
     <section
       id="live-stats"
-      style={{ background: PAPER, color: INK, padding: '96px 24px' }}
+      className="rc-stats"
       aria-label="Live on-chain statistics"
       aria-live="polite"
     >
-      <style>{`@keyframes rc-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
-      <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-        <p
-          style={{
-            fontSize: 12,
-            letterSpacing: '0.28em',
-            fontWeight: 700,
-            color: GREEN,
-            margin: '0 0 16px',
-          }}
-        >
-          DERIVED FROM CHAIN LOGS. NOTHING INVENTED.
-        </p>
-        <h2
-          style={{
-            fontSize: 'clamp(32px, 5vw, 56px)',
-            lineHeight: 1.05,
-            fontWeight: 800,
-            letterSpacing: '-0.02em',
-            margin: '0 0 56px',
-            maxWidth: 800,
-          }}
-        >
-          The ledger, live.
-        </h2>
+      <div className="rc-stats-wrap">
+        <Reveal>
+          <p className="rc-eyebrow">Derived from chain logs. Nothing invented.</p>
+          <h2 className="rc-section-title">The ledger, live.</h2>
+          <p className="rc-parenthetical">
+            <em>( rebuilt from escrow events on Arc mainnet )</em>
+          </p>
+        </Reveal>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 32,
-          }}
-        >
+        <div className="rc-stat-grid">
           {phase === 'loading'
             ? labels.map((l) => <SkeletonCard key={l} label={l} />)
             : stats && (
@@ -214,6 +149,7 @@ export default function LiveStats() {
                   />
                   <StatCard
                     label={labels[3]}
+                    icon={<TokenIcon token="USDC" size={16} />}
                     value={Number(stats.volumeUsdc).toLocaleString('en-US', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -223,11 +159,14 @@ export default function LiveStats() {
               )}
         </div>
 
-        <p style={{ marginTop: 48, fontSize: 14, lineHeight: 1.6, opacity: 0.6, maxWidth: 720 }}>
-          Receipt counts and volume are rebuilt from escrow contract events on
-          Arc mainnet. If this block is empty, the stats service is unreachable
-          — and we show nothing rather than numbers we can&apos;t stand behind.
-        </p>
+        <Reveal>
+          <p className="rc-stats-note">
+            Receipt counts and volume are rebuilt from escrow contract events
+            on Arc mainnet. If this block is empty, the stats service is
+            unreachable — and we show nothing rather than numbers we
+            can&apos;t stand behind.
+          </p>
+        </Reveal>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
-/* RAINCHECK hero — DESIGN STANDARD (Phase A).
-   Tokens (§9): bg #0B1220 · accent #35E0FF · paper #F4EFE6 · text-on-dark #F4FEFF.
+/* RAINCHECK hero — premium editorial composition.
+   Tokens: bg #0B1220 · accent #35E0FF · paper #F4EFE6 · text-on-dark #F4FEFF.
    NO serif anywhere. Accent touches exactly ONE hero word.
-   Animation (§5): transform + opacity only; marquee + one ambient loop. */
+   Animation: transform + opacity only; marquee + one ambient loop; ≤0.8s reveals. */
 
 .rc-hero {
   --rc-bg: #0b1220;
@@ -12,54 +12,38 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 100svh;
   background: var(--rc-bg);
   color: var(--rc-ondark);
   overflow: hidden;
   isolation: isolate;
-  padding-top: 72px; /* clears the fixed nav */
+  padding-top: 64px; /* clears the fixed nav */
 }
 
-/* film grain — near-zero risk texture, encouraged (§4) */
+/* film grain — near-zero risk texture */
 .rc-hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 3;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.5;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ---------- 1 · brand mark ---------- */
-.rc-brandmark {
-  position: relative;
-  z-index: 2;
-  padding: 28px clamp(20px, 4.5vw, 64px) 8px;
-}
-
-.rc-brandmark-img {
-  display: block;
-  height: 34px;
-  width: auto;
-}
-
-/* ---------- 2 · ambient visual (melts into bg — no card, no border, no shadow) ---------- */
-.rc-ambient {
-  position: relative;
-  z-index: 1;
-  margin: 12px auto 0;
-  width: min(1060px, 92vw);
-  display: flex;
-  justify-content: center;
+/* ---------- ambient visual: full-bleed art, NO box ---------- */
+.rc-hero-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .rc-hero-img {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 46vh;
-  object-fit: contain;
-  /* melt test: edge pixels of /hero.png are #0B1220 — no mask, no frame */
+  height: 100%;
+  object-fit: cover;
+  object-position: 68% 50%;
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -67,17 +51,31 @@
 }
 
 .rc-ambient-float {
-  animation: rc-float 7s ease-in-out infinite;
+  animation: rc-float 8s ease-in-out infinite;
 }
 
 @keyframes rc-float {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-9px) scale(1.008);
   }
+}
+
+/* legibility scrim over the art's empty left third */
+.rc-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    92deg,
+    var(--rc-bg) 0%,
+    rgba(11, 18, 32, 0.94) 24%,
+    rgba(11, 18, 32, 0.62) 40%,
+    rgba(11, 18, 32, 0.08) 62%,
+    rgba(11, 18, 32, 0) 78%
+  );
 }
 
 /* CSS fallback — line-art on #0B1220, melts like the image */
@@ -90,80 +88,47 @@
   background: var(--rc-bg);
 }
 
-/* ---------- 3 · signature marquee ticker (full-bleed) ---------- */
-.rc-marquee {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  margin-top: 26px;
-  border-top: 1px solid rgba(244, 254, 255, 0.12);
-  border-bottom: 1px solid rgba(244, 254, 255, 0.12);
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 14px 0;
-}
-
-.rc-marquee:hover .rc-marquee-track {
-  animation-play-state: paused;
-}
-
-.rc-marquee-track {
-  display: inline-flex;
-  will-change: transform;
-  animation: rc-marquee 24s linear infinite;
-}
-
-.rc-marquee-chunk {
-  font-weight: 800;
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--rc-accent);
-  padding-right: 0.4em;
-}
-
-.rc-marquee-chunk b {
-  padding: 0 1.1em;
-  font-weight: 400;
-  color: rgba(244, 254, 255, 0.35);
-}
-
-@keyframes rc-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-/* ---------- 4 · headline + subline + CTA row ---------- */
+/* ---------- type over the empty left third ---------- */
 .rc-hero-inner {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: clamp(44px, 7vh, 88px) clamp(20px, 4.5vw, 64px)
-    clamp(56px, 8vh, 110px);
+  padding: clamp(40px, 9vh, 96px) clamp(20px, 4.5vw, 64px) 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.rc-hero-eyebrow {
+  margin: 0 0 22px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--rc-accent);
 }
 
 .rc-title {
-  margin: 0 0 26px;
+  margin: 0;
   font-family: "Archivo Black", "Inter Tight", Inter, system-ui, -apple-system,
     "Segoe UI";
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: -0.02em;
-  line-height: 0.92;
-  font-size: clamp(4rem, 11vw, 7.5rem); /* ≥64px desktop, up to ~120px */
+  line-height: 0.94;
+  /* founder cap: display-to-body ≤ 10x, ≥ 6x. 6rem/1rem = 6x. */
+  font-size: clamp(3rem, 7vw, 6rem);
   color: var(--rc-ondark);
+  text-wrap: balance;
 }
 
 .rc-line {
   display: block;
   overflow: hidden;
-  padding-bottom: 0.06em; /* descender room inside the mask */
+  padding-bottom: 0.07em; /* descender room inside the mask */
 }
 
 .rc-word {
@@ -188,13 +153,59 @@
   }
 }
 
+.rc-hero-parenthetical {
+  margin: 22px 0 0;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  font-style: italic;
+  font-weight: 500;
+  color: rgba(244, 254, 255, 0.72);
+  letter-spacing: 0.01em;
+}
+
 .rc-sub {
-  margin: 0 0 40px;
-  max-width: 60ch;
-  font-size: clamp(1rem, 1.5vw, 1.2rem);
-  line-height: 1.6;
+  margin: 18px 0 0;
+  max-width: 46ch;
+  font-size: 1rem;
+  line-height: 1.65;
   font-weight: 500;
   color: rgba(244, 254, 255, 0.78);
+}
+
+/* token strip — real USDC/EURC marks, self-hosted */
+.rc-hero-tokens {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.rc-hero-tokens-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(244, 254, 255, 0.5);
+  margin-right: 2px;
+}
+
+.rc-token-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px 8px 10px;
+  border: 1px solid rgba(244, 254, 255, 0.16);
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--rc-ondark);
+  background: rgba(244, 254, 255, 0.04);
+}
+
+.rc-token-chip img {
+  border-radius: 50%;
 }
 
 .rc-ctas {
@@ -202,6 +213,7 @@
   flex-wrap: wrap;
   gap: 16px;
   align-items: center;
+  margin-top: 34px;
 }
 
 .rc-btn {
@@ -214,14 +226,13 @@
   font-size: 1.02rem;
   letter-spacing: 0.01em;
   padding: 16px 34px;
-  border-radius: 100px; /* §6 shimmer-button radius */
+  border-radius: 100px;
   text-decoration: none;
   overflow: hidden;
   transition: transform 0.22s ease, background-color 0.22s ease,
     color 0.22s ease, border-color 0.22s ease;
 }
 
-/* exactly ONE primary per screen (§6, §10) */
 .rc-btn-primary {
   background: var(--rc-accent);
   color: var(--rc-bg);
@@ -291,7 +302,56 @@
   transform: translateY(-2px);
 }
 
-/* ---------- generic entrance (opacity + translateY only, §5) ---------- */
+/* ---------- signature marquee ticker (full-bleed) ---------- */
+.rc-marquee {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin-top: auto;
+  border-top: 1px solid rgba(244, 254, 255, 0.12);
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 14px 0;
+  background: rgba(11, 18, 32, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.rc-marquee:hover .rc-marquee-track {
+  animation-play-state: paused;
+}
+
+.rc-marquee-track {
+  display: inline-flex;
+  will-change: transform;
+  animation: rc-marquee 24s linear infinite;
+}
+
+.rc-marquee-chunk {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rc-accent);
+  padding-right: 0.4em;
+}
+
+.rc-marquee-chunk b {
+  padding: 0 1.1em;
+  font-weight: 400;
+  color: rgba(244, 254, 255, 0.35);
+}
+
+@keyframes rc-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- generic entrance (opacity + translateY only) ---------- */
 .rc-anim {
   opacity: 0;
   animation: rc-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -310,27 +370,26 @@
 
 /* ---------- responsive ---------- */
 @media (max-width: 640px) {
-  /* §8: visual below headline on mobile */
-  .rc-ambient {
-    order: 4;
-    width: 94vw;
-    margin-top: 8px;
+  .rc-hero-img {
+    object-position: 64% 42%;
+    opacity: 0.42;
   }
 
-  .rc-marquee {
-    order: 5;
-  }
-
-  .rc-hero-inner {
-    order: 2;
-  }
-
-  .rc-brandmark {
-    order: 1;
+  .rc-hero-scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(11, 18, 32, 0.88) 0%,
+      rgba(11, 18, 32, 0.72) 42%,
+      rgba(11, 18, 32, 0.9) 100%
+    );
   }
 
   .rc-title {
-    font-size: clamp(3.4rem, 17vw, 4.6rem);
+    font-size: clamp(3rem, 15.5vw, 3.9rem);
+  }
+
+  .rc-hero-inner {
+    padding-top: clamp(56px, 10vh, 88px);
   }
 
   .rc-ctas {
@@ -341,10 +400,6 @@
   .rc-btn {
     justify-content: center;
     min-height: 56px; /* ≥44px tap target */
-  }
-
-  .rc-hero-img {
-    max-height: 34vh;
   }
 }
 

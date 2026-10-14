@@ -1,0 +1,108 @@
+/* RAINCHECK TrustDisclosure — numbered disclosure rows on navy.
+   Tokens: #0B1220 · #35E0FF · #F4EFE6. No serif anywhere. */
+
+.rc-trust {
+  background: #0b1220;
+  color: #f4efe6;
+  padding: clamp(72px, 10vw, 128px) 24px;
+  border-top: 1px solid rgba(244, 254, 255, 0.08);
+}
+
+.rc-trust-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.rc-trust-eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #35e0ff;
+  margin: 0 0 20px;
+}
+
+.rc-trust-title {
+  color: #f4feff;
+}
+
+.rc-trust-sub {
+  color: rgba(244, 254, 255, 0.55);
+}
+
+.rc-trust-lede {
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: rgba(244, 254, 255, 0.75);
+  max-width: 62ch;
+  margin: 18px 0 0;
+}
+
+.rc-trust-list {
+  list-style: none;
+  margin: 56px 0 0;
+  padding: 0;
+}
+
+.rc-trust-row {
+  border-top: 1px solid rgba(244, 254, 255, 0.16);
+}
+
+.rc-trust-row:last-child {
+  border-bottom: 1px solid rgba(244, 254, 255, 0.16);
+}
+
+.rc-trust-row-inner {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 24px;
+  padding: 30px 8px;
+}
+
+.rc-trust-num {
+  font-family: "Archivo Black", Inter, system-ui;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #35e0ff;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.rc-trust-h {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: #f4feff;
+}
+
+.rc-trust-p {
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 68ch;
+  color: rgba(244, 254, 255, 0.68);
+}
+
+.rc-trust-close {
+  margin: 48px 0 0;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: rgba(244, 254, 255, 0.8);
+  max-width: 68ch;
+  border-left: 3px solid #35e0ff;
+  padding-left: 20px;
+}
+
+@media (max-width: 640px) {
+  .rc-trust-row-inner {
+    grid-template-columns: 48px 1fr;
+    gap: 14px;
+    padding: 24px 4px;
+  }
+
+  .rc-trust-num {
+    font-size: 1.15rem;
+  }
+}
