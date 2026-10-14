@@ -1,107 +1,141 @@
-/* F7 — Verify page. Design law §9 tokens: bg #0B1220 / accent #35E0FF /
-   paper #F4EFE6 / text-on-dark #F4FEFF. MISMATCH uses a warm red (not accent).
-   Dashboard = contained max-width, never full-bleed. */
-
-.rc-verify {
-  --rc-ink: #0b1220;
-  --rc-accent: #35e0ff;
-  --rc-paper: #f4efe6;
-  --rc-ice: #f4feff;
-  --rc-danger: #f87171;
-  --rc-line: rgba(244, 254, 255, 0.12);
-  --rc-panel: #0e1728;
-  --rc-muted: rgba(244, 254, 255, 0.62);
-
-  background: var(--rc-ink);
-  color: var(--rc-ice);
-  min-height: 100svh;
-  font-family: Inter, system-ui, -apple-system;
-  -webkit-font-smoothing: antialiased;
-}
+/* Verify — "DON'T TRUST. VERIFY." The no-wallet-needed proof screen.
+   App shell tokens come from src/styles/app.css (.rcx scope). This file
+   owns the verify hero, the form panel, the verdict seal, the check
+   list and the values grid. */
 
 .rc-verify-inner {
-  max-width: 880px;
+  max-width: 56rem;
   margin: 0 auto;
-  padding: 28px 20px 90px;
+  padding: 40px clamp(20px, 4vw, 48px) 88px;
 }
 
-.rc-back {
-  display: inline-block;
-  margin-bottom: 22px;
-  color: var(--rc-accent);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
+.rc-verify-head {
+  margin: 8px 0 30px;
+  position: relative;
 }
-.rc-back:hover { text-decoration: underline; }
 
-.rc-verify-head { margin-bottom: 28px; }
+.rc-verify-seal {
+  position: absolute;
+  right: 0;
+  top: -6px;
+  width: 96px;
+  height: 96px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .rc-verify-seal {
+    display: none;
+  }
+}
 
 .rc-display {
-  font-family: "Archivo Black", Inter, system-ui;
+  font-family: var(--rcx-display);
   font-weight: 900;
   text-transform: uppercase;
   line-height: 0.95;
   letter-spacing: -0.01em;
-  font-size: clamp(48px, 8vw, 84px);
-  margin: 0 0 16px;
+  font-size: clamp(46px, 7.5vw, 80px);
+  margin: 0 0 18px;
 }
-.rc-display-accent { color: var(--rc-accent); }
+.rc-display-accent {
+  color: var(--rcx-cyan);
+}
 
 .rc-subline {
-  font-size: 17px;
-  line-height: 1.6;
-  color: var(--rc-muted);
-  max-width: 60ch;
+  font-size: 16.5px;
+  line-height: 1.65;
+  color: var(--rcx-muted);
+  max-width: 58ch;
   margin: 0;
 }
 
+.rc-verify-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.rc-verify-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--rcx-muted);
+  border: 1px solid var(--rcx-line);
+  border-radius: 999px;
+  padding: 8px 15px;
+  min-height: 40px;
+}
+
+.rc-verify-chip svg {
+  width: 14px;
+  height: 14px;
+  color: var(--rcx-cyan);
+  flex: 0 0 14px;
+}
+
 .rc-panel {
-  background: var(--rc-panel);
-  border: 1px solid var(--rc-line);
-  border-radius: 14px;
-  padding: 26px;
+  background: var(--rcx-ink-2);
+  border: 1px solid var(--rcx-line);
+  border-radius: 20px;
+  padding: clamp(22px, 3.4vw, 34px);
   margin-bottom: 22px;
 }
 
-.rc-field { margin-bottom: 20px; }
-.rc-field:last-of-type { margin-bottom: 8px; }
+.rc-field {
+  margin-bottom: 22px;
+}
+.rc-field:last-of-type {
+  margin-bottom: 8px;
+}
 
 .rc-field label {
   display: block;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 15px;
   margin-bottom: 4px;
 }
 .rc-hint {
   font-size: 13.5px;
-  color: var(--rc-muted);
+  color: var(--rcx-muted);
   margin: 0 0 10px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .rc-textarea,
 .rc-input {
   width: 100%;
   box-sizing: border-box;
-  background: #0a1120;
-  border: 1px solid var(--rc-line);
-  border-radius: 10px;
-  color: var(--rc-ice);
+  background: rgba(11, 18, 32, 0.6);
+  border: 1px solid rgba(244, 254, 255, 0.16);
+  border-radius: 14px;
+  color: var(--rcx-ice);
+  font-family: var(--rcx-sans);
   font-size: 14px;
-  padding: 12px 14px;
-  line-height: 1.55;
+  padding: 14px 16px;
+  line-height: 1.6;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.rc-textarea { resize: vertical; min-height: 180px; }
-.rc-mono { font-family: ui-monospace, "JetBrains Mono", monospace; }
+.rc-textarea {
+  resize: vertical;
+  min-height: 170px;
+}
+.rc-mono {
+  font-family: var(--rcx-mono);
+}
 .rc-textarea:focus,
 .rc-input:focus {
   outline: none;
-  border-color: var(--rc-accent);
+  border-color: var(--rcx-cyan);
+  box-shadow: 0 0 0 3px rgba(53, 224, 255, 0.16);
 }
 
 .rc-field-error {
-  color: var(--rc-danger);
+  color: var(--rcx-danger);
   font-size: 13.5px;
   margin: 8px 0 0;
   line-height: 1.5;
@@ -111,203 +145,313 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
-/* One primary action per screen (standard §7.1). Solid accent, no shimmer
-   outside the landing hero. */
+/* One primary action per screen. Solid accent, no shimmer. */
 .rc-primary {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: var(--rc-accent);
+  background: var(--rcx-cyan);
   color: #06222b;
   font-weight: 800;
   font-size: 15px;
   border: none;
-  border-radius: 100px;
-  padding: 13px 26px;
+  border-radius: 999px;
+  padding: 13px 28px;
   cursor: pointer;
-  min-height: 48px;
+  min-height: 52px;
+  transition: filter 0.15s ease;
 }
-.rc-primary:disabled { opacity: 0.65; cursor: wait; }
-.rc-primary:not(:disabled):hover { filter: brightness(1.08); }
+.rc-primary:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.rc-primary:not(:disabled):hover {
+  filter: brightness(1.08);
+}
 
 .rc-ghost {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   background: transparent;
-  color: var(--rc-ice);
-  font-weight: 600;
+  color: var(--rcx-ice);
+  font-weight: 700;
   font-size: 15px;
-  border: 1px solid var(--rc-line);
-  border-radius: 100px;
-  padding: 13px 22px;
+  border: 1px solid var(--rcx-line);
+  border-radius: 999px;
+  padding: 13px 24px;
   cursor: pointer;
-  min-height: 48px;
+  min-height: 52px;
+  transition: border-color 0.15s ease;
 }
-.rc-ghost:disabled { opacity: 0.6; cursor: wait; }
-.rc-ghost:not(:disabled):hover { border-color: var(--rc-accent); }
+.rc-ghost:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.rc-ghost:not(:disabled):hover {
+  border-color: var(--rcx-cyan);
+}
 
-/* Spinner lives INSIDE the clicked button (standard §6) — no page spinners. */
+/* Spinner lives INSIDE the clicked button — no page spinners. */
 .rc-spinner {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(6, 34, 43, 0.3);
+  border: 2.5px solid rgba(6, 34, 43, 0.3);
   border-top-color: currentColor;
-  animation: rc-spin 0.8s linear infinite;
+  animation: rcx-spin 0.8s linear infinite;
+  flex: 0 0 16px;
 }
-@keyframes rc-spin { to { transform: rotate(360deg); } }
+@keyframes rcx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .rc-fatal {
-  margin: 16px 0 0;
-  background: rgba(248, 113, 113, 0.09);
+  margin: 18px 0 0;
+  background: rgba(248, 113, 113, 0.08);
   border: 1px solid rgba(248, 113, 113, 0.45);
-  border-radius: 10px;
-  padding: 12px 16px;
+  border-radius: 14px;
+  padding: 14px 18px;
   font-size: 14.5px;
   line-height: 1.55;
   color: #fecaca;
 }
 
 /* Skeleton regions while the RPC read is in flight — never blank space,
-   never invented rows. Shimmer is opacity-only friendly (no layout cost). */
+   never invented rows. */
 .rc-skel {
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 10px;
   background: rgba(244, 254, 255, 0.07);
 }
 .rc-skel::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(244, 254, 255, 0.12), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(244, 254, 255, 0.11),
+    transparent
+  );
   background-size: 400px 100%;
-  animation: rc-shimmer 1.4s ease-in-out infinite;
+  animation: rcx-shimmer 1.4s ease-in-out infinite;
 }
-@keyframes rc-shimmer {
-  0% { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+@keyframes rcx-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }
-.rc-skel-banner { height: 96px; margin-bottom: 18px; }
-.rc-skel-line { height: 16px; margin-bottom: 12px; }
+.rc-skel-banner {
+  height: 104px;
+  margin-bottom: 18px;
+}
+.rc-skel-line {
+  height: 16px;
+  margin-bottom: 12px;
+}
 
+/* ---------- verdict seal ---------- */
 .rc-verdict {
-  border-radius: 12px;
-  padding: 20px 22px;
-  margin-bottom: 24px;
-  border: 1px solid;
+  border-radius: 18px;
+  padding: clamp(22px, 3.4vw, 32px);
+  margin-bottom: 26px;
+  border: 1.5px solid;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
 }
+
+.rc-verdict-seal {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+}
+
 .rc-verdict.is-match {
   border-color: rgba(53, 224, 255, 0.55);
-  background: rgba(53, 224, 255, 0.08);
+  background: rgba(53, 224, 255, 0.07);
 }
 .rc-verdict.is-mismatch {
   border-color: rgba(248, 113, 113, 0.55);
-  background: rgba(248, 113, 113, 0.08);
+  background: rgba(248, 113, 113, 0.07);
 }
 .rc-verdict-word {
-  font-family: "Archivo Black", Inter, system-ui;
-  font-size: clamp(34px, 6vw, 52px);
+  font-family: var(--rcx-display);
+  font-size: clamp(32px, 5.4vw, 50px);
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: -0.01em;
   margin-bottom: 8px;
 }
-.is-match .rc-verdict-word { color: var(--rc-accent); }
-.is-mismatch .rc-verdict-word { color: var(--rc-danger); }
-.rc-verdict-line { margin: 0; font-size: 15px; line-height: 1.55; color: var(--rc-ice); }
+.is-match .rc-verdict-word {
+  color: var(--rcx-cyan);
+}
+.is-mismatch .rc-verdict-word {
+  color: var(--rcx-danger);
+}
+.rc-verdict-line {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--rcx-ice);
+}
 
 .rc-section-title {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--rc-muted);
-  margin: 26px 0 12px;
+  letter-spacing: 0.12em;
+  color: var(--rcx-faint);
+  margin: 28px 0 6px;
 }
 
-.rc-checks { list-style: none; margin: 0; padding: 0; }
+.rc-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 .rc-check {
   display: flex;
-  gap: 12px;
-  padding: 12px 0;
-  border-top: 1px solid var(--rc-line);
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rcx-line-soft);
+  align-items: flex-start;
 }
 .rc-check-mark {
-  flex: 0 0 24px;
-  height: 24px;
+  flex: 0 0 28px;
+  height: 28px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
+  margin-top: 1px;
 }
-.is-pass .rc-check-mark { background: rgba(53, 224, 255, 0.14); color: var(--rc-accent); }
-.is-fail .rc-check-mark { background: rgba(248, 113, 113, 0.14); color: var(--rc-danger); }
-.rc-check-label { font-weight: 700; font-size: 14.5px; }
-.rc-check-detail { font-size: 13.5px; color: var(--rc-muted); line-height: 1.55; margin-top: 2px; }
+.is-pass .rc-check-mark {
+  background: rgba(53, 224, 255, 0.13);
+  color: var(--rcx-cyan);
+}
+.is-fail .rc-check-mark {
+  background: rgba(248, 113, 113, 0.13);
+  color: var(--rcx-danger);
+}
+.rc-check-label {
+  font-weight: 700;
+  font-size: 15px;
+}
+.rc-check-detail {
+  font-size: 13.5px;
+  color: var(--rcx-muted);
+  line-height: 1.6;
+  margin-top: 3px;
+}
 
-.rc-values { margin: 0; }
+.rc-values {
+  margin: 0;
+}
 .rc-value-row {
   display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 12px;
-  padding: 12px 0;
-  border-top: 1px solid var(--rc-line);
+  grid-template-columns: 210px 1fr;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rcx-line-soft);
   font-size: 14px;
+  align-items: start;
 }
-.rc-value-row dt { color: var(--rc-muted); font-weight: 600; }
-.rc-value-row dd { margin: 0; line-height: 1.7; word-break: break-all; }
+.rc-value-row dt {
+  color: var(--rcx-muted);
+  font-weight: 700;
+  font-size: 13px;
+}
+.rc-value-row dd {
+  margin: 0;
+  line-height: 1.75;
+  word-break: break-all;
+  min-width: 0;
+}
 
-/* Hashes and technical values are copyable code — never headings (§7.8). */
+/* Hashes and technical values are copyable code — never headings. */
 .rc-code {
-  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-family: var(--rcx-mono);
   font-size: 12.5px;
-  background: rgba(244, 254, 255, 0.07);
-  border: 1px solid var(--rc-line);
-  border-radius: 6px;
-  padding: 3px 8px;
+  background: rgba(244, 254, 255, 0.06);
+  border: 1px solid var(--rcx-line);
+  border-radius: 8px;
+  padding: 4px 10px;
   word-break: break-all;
 }
-.rc-code-wrap { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rc-code-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .rc-copy {
   background: transparent;
-  border: 1px solid var(--rc-line);
-  color: var(--rc-muted);
-  border-radius: 6px;
+  border: 1px solid var(--rcx-line);
+  color: var(--rcx-muted);
+  border-radius: 8px;
   font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
+  font-weight: 700;
+  padding: 6px 12px;
   cursor: pointer;
-  min-height: 32px;
+  min-height: 36px;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
-.rc-copy:hover { color: var(--rc-accent); border-color: var(--rc-accent); }
+.rc-copy:hover {
+  color: var(--rcx-cyan);
+  border-color: var(--rcx-cyan);
+}
 
-.rc-link { color: var(--rc-accent); font-size: 13.5px; text-decoration: none; font-weight: 600; }
-.rc-link:hover { text-decoration: underline; }
-.rc-muted { color: var(--rc-muted); font-size: 13.5px; }
+.rc-link {
+  color: var(--rcx-cyan);
+  font-size: 13.5px;
+  text-decoration: none;
+  font-weight: 700;
+}
+.rc-link:hover {
+  text-decoration: underline;
+}
+.rc-muted {
+  color: var(--rcx-muted);
+  font-size: 13.5px;
+}
 
 .rc-fineprint {
   font-size: 12.5px;
-  color: var(--rc-muted);
-  margin: 22px 0 0;
-  line-height: 1.6;
+  color: var(--rcx-faint);
+  margin: 24px 0 0;
+  line-height: 1.65;
 }
 
 @media (max-width: 640px) {
-  .rc-panel { padding: 20px 16px; }
-  .rc-value-row { grid-template-columns: 1fr; gap: 6px; }
+  .rc-value-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .rc-verdict {
+    flex-direction: column;
+    gap: 14px;
+  }
 }
 
-/* Reduced motion is non-negotiable (standard §5): decorative loops stop,
-   everything renders in its final state. */
 @media (prefers-reduced-motion: reduce) {
   .rc-skel::after,
-  .rc-spinner { animation: none; }
-  .rc-skel::after { background: rgba(244, 254, 255, 0.08); }
+  .rc-spinner {
+    animation: none;
+  }
+  .rc-skel::after {
+    background: rgba(244, 254, 255, 0.08);
+  }
 }

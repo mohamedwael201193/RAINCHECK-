@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import AppHeader from "../components/dashboard/AppHeader";
 import { txUrl } from "../lib/chain";
 import {
   fetchNewestReceiptView,
@@ -12,6 +12,7 @@ import {
   type VerifyCheck,
   type VerifyReport,
 } from "../lib/verify";
+import "../styles/app.css";
 import "./VerifyPage.css";
 
 /**
@@ -166,15 +167,18 @@ export default function VerifyPage() {
   const busy = phase.kind === "verifying" || phase.kind === "loading-live";
 
   return (
-    <div className="rc-verify">
+    <div className="rcx rc-verify">
+      <AppHeader />
       <div className="rc-verify-inner">
-        <Link to="/" className="rc-back">
-          ← Back
-        </Link>
-
-        <header className="rc-verify-head">
+        <header className="rc-verify-head rcx-rise">
+          <p className="rcx-eyebrow">Trust, but verify</p>
+          <svg className="rc-verify-seal" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+            <rect x="26" y="10" width="44" height="76" rx="4" stroke="#35E0FF" strokeWidth="3" />
+            <path d="M26 22l6-5 6 5 6-5 6 5 6-5 6 5 6-5 6 5" stroke="#35E0FF" strokeWidth="3" strokeLinejoin="round" transform="translate(0,64)" />
+            <path d="M38 44l9 9 16-19" stroke="#F4EFE6" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <h1 className="rc-display">
-            DON'T TRUST.
+            DON&apos;T TRUST.
             <br />
             <span className="rc-display-accent">VERIFY.</span>
           </h1>
@@ -183,6 +187,20 @@ export default function VerifyPage() {
             browser and checks it against the on-chain Memo anchor — no wallet
             needed, nothing is signed.
           </p>
+          <div className="rc-verify-chips">
+            <span className="rc-verify-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+              No wallet needed
+            </span>
+            <span className="rc-verify-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+              Nothing is signed
+            </span>
+            <span className="rc-verify-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+              Checked live on Arc 5042
+            </span>
+          </div>
         </header>
 
         <form
@@ -289,12 +307,25 @@ export default function VerifyPage() {
             <div
               className={`rc-verdict ${report.verdict === "MATCH" ? "is-match" : "is-mismatch"}`}
             >
-              <div className="rc-verdict-word">{report.verdict}</div>
-              <p className="rc-verdict-line">
-                {report.verdict === "MATCH"
-                  ? "The receipt you pasted is exactly what the chain anchored — every check passed."
-                  : "Something doesn't line up. Read the failing check below to see what."}
-              </p>
+              {report.verdict === "MATCH" ? (
+                <svg className="rc-verdict-seal" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <circle cx="32" cy="32" r="29" stroke="#35E0FF" strokeWidth="3.5" />
+                  <path d="M21 33l8 8 14-17" stroke="#35E0FF" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <svg className="rc-verdict-seal" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <circle cx="32" cy="32" r="29" stroke="#F87171" strokeWidth="3.5" />
+                  <path d="M24 24l16 16M40 24L24 40" stroke="#F87171" strokeWidth="5" strokeLinecap="round" />
+                </svg>
+              )}
+              <div>
+                <div className="rc-verdict-word">{report.verdict}</div>
+                <p className="rc-verdict-line">
+                  {report.verdict === "MATCH"
+                    ? "The receipt you pasted is exactly what the chain anchored — every check passed."
+                    : "Something doesn't line up. Read the failing check below to see what."}
+                </p>
+              </div>
             </div>
 
             <h2 className="rc-section-title">What was checked</h2>

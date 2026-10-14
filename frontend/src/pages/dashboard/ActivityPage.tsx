@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { envVar, formatUSDC, shortHex } from "../../lib/chain";
 import TokenIcon from "../../components/TokenIcon";
+import AppHeader from "../../components/dashboard/AppHeader";
+import "../../styles/app.css";
 import "./ActivityPage.css";
 
 /**
@@ -315,13 +317,11 @@ export default function ActivityPage() {
   }, [state]);
 
   return (
-    <div className="rc-activity">
+    <div className="rcx rc-activity">
+      <AppHeader />
       <div className="rc-activity-inner">
-        <Link to="/" className="rc-back">
-          ← Back
-        </Link>
-
-        <header className="rc-activity-head">
+        <header className="rc-activity-head rcx-rise">
+          <p className="rcx-eyebrow">Activity</p>
           <h1 className="rc-display">
             EVERYTHING,
             <br />
@@ -372,7 +372,7 @@ export default function ActivityPage() {
 
         {state.kind === "ready" && stats && (
           <>
-            <div className="rc-stat-row">
+            <div className="rc-stat-row rcx-rise" style={{ ["--rcx-i" as string]: "70ms" }}>
               <StatCard label="Receipts" value={stats.receipts} />
               <StatCard label="Events tracked" value={stats.events} />
               <StatCard label="Disputes flagged" value={stats.disputes} tone="warn" />

@@ -53,6 +53,9 @@ import {
 } from "./newReceiptFlow";
 import TokenIcon from "../../components/TokenIcon";
 import GetEurcPanel from "../../components/GetEurcPanel";
+import AppHeader from "../../components/dashboard/AppHeader";
+import "../../styles/app.css";
+import "./NewReceiptPage.css";
 
 // ---------------------------------------------------------------------------
 // Form schema — react-hook-form + zod is the ONLY form pattern (§6).
@@ -162,24 +165,9 @@ function freshSteps(amountLabel: string, symbol: string): Step[] {
   ];
 }
 
-function Spinner({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg className={`${className} animate-spin`} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-    </svg>
-  );
+function Spinner({ className = "rc-spin" }: { className?: string }) {
+  return <span className={className} aria-hidden="true" />;
 }
-
-function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded bg-white/10 ${className}`} aria-hidden />;
-}
-
-const inputCls =
-  "mt-1 block w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-[15px] text-[#F4FEFF] placeholder:text-[#F4FEFF]/30 focus:border-[#35E0FF] focus:outline-none focus:ring-1 focus:ring-[#35E0FF]";
-const labelCls = "block text-[15px] font-medium text-[#F4FEFF]";
-const errCls = "mt-1 text-sm text-red-400";
-const hintCls = "mt-1 text-[13px] leading-5 text-[#F4FEFF]/55";
 
 export default function NewReceiptPage() {
   const navigate = useNavigate();
@@ -412,42 +400,76 @@ export default function NewReceiptPage() {
     /already (used|taken)/i.test(fatal);
 
   return (
-    <div className="min-h-screen bg-[#0B1220] text-[#F4FEFF]">
+    <div className="rcx rc-new">
       <Toaster theme="dark" position="bottom-right" richColors />
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        <Link to="/dashboard" className="text-sm text-[#35E0FF] hover:underline">
-          ← All receipts
+      <AppHeader />
+      <div className="rc-new-inner">
+        <Link to="/dashboard" className="rc-backlink">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M19 12H5m7-7l-7 7 7 7" />
+          </svg>
+          All receipts
         </Link>
-        <h1 className="mt-3 text-3xl font-extrabold tracking-tight">
-          Open a receipt
-        </h1>
-        <p className="mt-2 max-w-[60ch] text-[16px] leading-6 text-[#F4FEFF]/65">
-          Lock {tokenSymbol} against a signed delivery promise. The seller gets paid
-          only if they deliver and the protection window passes — otherwise the
-          money comes back to you, on-chain.
-        </p>
-        <p className="mt-1 text-[13px] text-[#F4FEFF]/45">
-          Takes about a minute: 3 wallet prompts (1 free signature + 2 transactions).
-        </p>
+
+        <header className="rc-new-head rcx-rise">
+          <p className="rcx-eyebrow">New receipt</p>
+          <h1 className="rcx-title">Open a receipt</h1>
+          <p className="rcx-sub">
+            Lock {tokenSymbol} against a signed delivery promise. The seller gets paid
+            only if they deliver and the protection window passes — otherwise the
+            money comes back to you, on-chain.
+          </p>
+          <p className="rcx-hint" style={{ marginTop: 8 }}>
+            Takes about a minute: 3 wallet prompts (1 free signature + 2 transactions).
+          </p>
+        </header>
 
         {/* wallet */}
-        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          {buyer ? (
-            <p className="text-sm text-[#F4FEFF]/80">
-              Buying as <code className="font-mono text-[#35E0FF]">{shortHex(buyer)}</code>
-              <span className="ml-2 text-[#F4FEFF]/45">Any wallet can open a receipt — no allowlist.</span>
-            </p>
-          ) : (
-            <p className="text-sm text-[#F4FEFF]/60">
-              Connect a wallet to open a receipt. MetaMask or Rabby both work.
-            </p>
-          )}
-        </div>
+        <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "60ms" }} aria-label="Wallet">
+          <div className="rc-new-wallet">
+            {buyer ? (
+              <>
+                <span className="rc-wallet-dot" aria-hidden="true" />
+                <p style={{ margin: 0, fontSize: 15 }}>
+                  Buying as{" "}
+                  <code className="rcx-mono" style={{ fontWeight: 700 }}>{shortHex(buyer)}</code>
+                </p>
+                <p className="rcx-hint" style={{ margin: 0, width: "100%" }}>
+                  Any wallet can open a receipt — no allowlist.
+                </p>
+              </>
+            ) : (
+              <>
+                <div style={{ flex: "1 1 220px" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700 }}>Connect a wallet</p>
+                  <p className="rcx-hint" style={{ margin: 0 }}>
+                    MetaMask or Rabby both work. Nothing is signed until you open the receipt.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onConnect}
+                  disabled={connecting}
+                  className="rcx-btn rcx-btn-primary"
+                >
+                  {connecting && <Spinner />}
+                  {connecting ? "Connecting…" : "Connect wallet"}
+                </button>
+              </>
+            )}
+          </div>
+        </section>
 
         {/* payment token selector — one escrow instance per token */}
-        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className={labelCls}>Payment token</p>
-          <div className="mt-2 flex gap-2" role="radiogroup" aria-label="Payment token">
+        <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "110ms" }} aria-label="Payment token">
+          <div className="rc-new-card-head">
+            <span className="rc-new-num" aria-hidden="true">01</span>
+            <div>
+              <h2>Payment token</h2>
+              <p>Each token has its own audited escrow instance. Pick the one the deal is priced in.</p>
+            </div>
+          </div>
+          <div className="rc-token-opts" role="radiogroup" aria-label="Payment token">
             {(Object.keys(PAYMENT_TOKENS) as PaymentTokenSymbol[]).map((sym) => {
               const selected = sym === tokenSymbol;
               return (
@@ -457,159 +479,193 @@ export default function NewReceiptPage() {
                   role="radio"
                   aria-checked={selected}
                   onClick={() => setTokenSymbol(sym)}
-                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-lg border px-5 py-2 text-[15px] font-bold ${
-                    selected
-                      ? "border-[#35E0FF] bg-[#35E0FF]/15 text-[#35E0FF]"
-                      : "border-white/15 bg-white/5 text-[#F4FEFF]/70 hover:border-white/30"
-                  }`}
+                  className={`rc-token-opt${selected ? " is-selected" : ""}`}
                 >
-                  <TokenIcon token={sym} size={22} />
-                  {sym}
+                  <span className="rc-token-opt-icon" aria-hidden="true">
+                    <TokenIcon token={sym} size={34} />
+                  </span>
+                  <span>
+                    <span className="rc-token-opt-name">{sym}</span>
+                    <span className="rc-token-opt-sub" style={{ display: "block" }}>
+                      {sym === "USDC"
+                        ? "USD Coin · the default escrow instance"
+                        : "Euro Coin · the second production escrow"}
+                    </span>
+                  </span>
+                  <span className="rc-token-opt-check" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#06222B" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 10.5l4 4 8-9" />
+                    </svg>
+                  </span>
                 </button>
               );
             })}
           </div>
-          <p className={hintCls}>
-            {tokenSymbol === "USDC"
-              ? "USDC — the default escrow instance."
-              : "EURC — the second production escrow instance (same audited contract, EURC token only)."}
-          </p>
-        </div>
+        </section>
 
         {/* Founder order: a USDC-only user picking EURC is never stranded. */}
         {tokenSymbol === "EURC" && (
-          <div className="mt-4">
+          <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "140ms" }} aria-label="Get EURC">
             <GetEurcPanel />
-          </div>
+          </section>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-            <label className={labelCls} htmlFor="nr-seller">
-              Seller
+          <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "170ms" }} aria-label="Receipt details">
+            <div className="rc-new-card-head">
+              <span className="rc-new-num" aria-hidden="true">02</span>
+              <div>
+                <h2>The deal</h2>
+                <p>Who gets paid, how much, for what — and by when. All four become part of the terms you sign.</p>
+              </div>
+            </div>
+
+            <div className="rc-field">
+              <label className="rcx-label" htmlFor="nr-seller">Seller</label>
+              {!errors.seller && (
+                <p className="rcx-hint">The wallet or service getting paid on delivery.</p>
+              )}
               <input
                 id="nr-seller"
                 type="text"
                 placeholder="0x…"
                 autoComplete="off"
                 spellCheck={false}
-                className={`${inputCls} font-mono`}
+                className="rcx-input rcx-mono"
                 {...register("seller")}
               />
-            </label>
-            {errors.seller ? (
-              <p className={errCls}>{errors.seller.message}</p>
-            ) : (
-              <p className={hintCls}>The wallet or service getting paid on delivery.</p>
-            )}
-            {selfBuyWarning && !errors.seller && (
-              <p className="mt-1 text-sm text-amber-300">{selfBuyWarning}</p>
-            )}
+              {errors.seller && (
+                <p className="rcx-field-error" role="alert">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 8v5m0 3.5v.01M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" /></svg>
+                  {errors.seller.message}
+                </p>
+              )}
+              {selfBuyWarning && !errors.seller && (
+                <p className="rcx-field-error" style={{ color: "#fde68a" }} role="note">{selfBuyWarning}</p>
+              )}
+            </div>
 
-            <label className={`${labelCls} mt-5`} htmlFor="nr-amount">
-              Amount
+            <div className="rc-field">
+              <label className="rcx-label" htmlFor="nr-amount">Amount</label>
+              {!errors.amount && (
+                <p className="rcx-hint">{tokenSymbol}. Pulled from your wallet exactly — never more.</p>
+              )}
               <input
                 id="nr-amount"
                 type="text"
                 inputMode="decimal"
                 placeholder="0.5"
                 autoComplete="off"
-                className={inputCls}
+                className="rcx-input"
                 {...register("amount")}
               />
-            </label>
-            {errors.amount ? (
-              <p className={errCls}>{errors.amount.message}</p>
-            ) : (
-              <p className={hintCls}>{tokenSymbol}. Pulled from your wallet exactly — never more.</p>
-            )}
-            {dustWarning && !errors.amount && (
-              <p className="mt-1 text-sm text-amber-300">{dustWarning}</p>
-            )}
+              {errors.amount && (
+                <p className="rcx-field-error" role="alert">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 8v5m0 3.5v.01M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" /></svg>
+                  {errors.amount.message}
+                </p>
+              )}
+              {dustWarning && !errors.amount && (
+                <p className="rcx-field-error" style={{ color: "#fde68a" }} role="note">{dustWarning}</p>
+              )}
+            </div>
 
-            <label className={`${labelCls} mt-5`} htmlFor="nr-desc">
-              What are you buying?
+            <div className="rc-field">
+              <label className="rcx-label" htmlFor="nr-desc">What are you buying?</label>
+              {!errors.description && (
+                <p className="rcx-hint">
+                  An endpoint URL or plain description. This text goes into the terms you sign —
+                  it&apos;s what the seller is held to.
+                </p>
+              )}
               <textarea
                 id="nr-desc"
                 rows={3}
                 placeholder="e.g. https://api.example.com/v1/summarize — a 500-word summary of the attached document"
-                className={`${inputCls} resize-y`}
+                className="rcx-input rcx-textarea"
+                style={{ resize: "vertical" }}
                 {...register("description")}
               />
-            </label>
-            {errors.description ? (
-              <p className={errCls}>{errors.description.message}</p>
-            ) : (
-              <p className={hintCls}>
-                An endpoint URL or plain description. This text goes into the terms you sign —
-                it's what the seller is held to.
-              </p>
-            )}
+              {errors.description && (
+                <p className="rcx-field-error" role="alert">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 8v5m0 3.5v.01M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" /></svg>
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
 
-            <label className={`${labelCls} mt-5`} htmlFor="nr-deadline">
-              Delivery deadline
-              <input id="nr-deadline" type="datetime-local" className={inputCls} {...register("deadline")} />
-            </label>
-            {errors.deadline ? (
-              <p className={errCls}>{errors.deadline.message}</p>
-            ) : (
-              <p className={hintCls}>
-                If the seller hasn't delivered by then, anyone can close the receipt and your
-                {tokenSymbol} returns on-chain.
-              </p>
-            )}
-          </div>
+            <div className="rc-field">
+              <label className="rcx-label" htmlFor="nr-deadline">Delivery deadline</label>
+              {!errors.deadline && (
+                <p className="rcx-hint">
+                  If the seller hasn&apos;t delivered by then, anyone can close the receipt and your
+                  {tokenSymbol} returns on-chain.
+                </p>
+              )}
+              <input id="nr-deadline" type="datetime-local" className="rcx-input" {...register("deadline")} />
+              {errors.deadline && (
+                <p className="rcx-field-error" role="alert">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 8v5m0 3.5v.01M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" /></svg>
+                  {errors.deadline.message}
+                </p>
+              )}
+            </div>
+          </section>
 
           {/* what the wallet will be asked to sign */}
-          <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-            <h2 className="text-lg font-bold">What your wallet will be asked to sign</h2>
-            <p className={hintCls}>Exactly three prompts, in order. Nothing else.</p>
-            <ol className="mt-4 space-y-3">
-              <li className="rounded-lg bg-white/[0.04] p-3.5">
-                <p className="text-[15px] font-semibold">
-                  <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#35E0FF]/15 text-[13px] font-bold text-[#35E0FF]">1</span>
-                  Sign the terms <span className="font-normal text-[#F4FEFF]/50">— free, off-chain</span>
-                </p>
-                <p className="mt-1.5 pl-8 text-[13px] leading-5 text-[#F4FEFF]/55">
-                  Covers what you're buying, the amount ({amountLabel} {tokenSymbol}), and the deadline.
-                  A signature can't move money.
-                </p>
+          <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "200ms" }} aria-label="What your wallet will be asked to sign">
+            <div className="rc-new-card-head">
+              <span className="rc-new-num" aria-hidden="true">03</span>
+              <div>
+                <h2>What your wallet will be asked to sign</h2>
+                <p>Exactly three prompts, in order. Nothing else — if a fourth appears, reject it.</p>
+              </div>
+            </div>
+            <ol className="rc-roadmap">
+              <li>
+                <span className="rc-roadmap-num" aria-hidden="true">1</span>
+                <div>
+                  <p className="rc-roadmap-title">Sign the terms <span className="rc-roadmap-free">— free, off-chain</span></p>
+                  <p className="rc-roadmap-desc">
+                    Covers what you&apos;re buying, the amount ({amountLabel} {tokenSymbol}), and the deadline.
+                    A signature can&apos;t move money.
+                  </p>
+                </div>
               </li>
-              <li className="rounded-lg bg-white/[0.04] p-3.5">
-                <p className="text-[15px] font-semibold">
-                  <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#35E0FF]/15 text-[13px] font-bold text-[#35E0FF]">2</span>
-                  Approve {amountLabel} {tokenSymbol}
-                </p>
-                <p className="mt-1.5 pl-8 text-[13px] leading-5 text-[#F4FEFF]/55">
-                  Lets the escrow pull exactly {amountLabel} {tokenSymbol} from your wallet. On-chain,
-                  manual gas limit {GAS_LIMITS.approve.toLocaleString()}.
-                </p>
+              <li>
+                <span className="rc-roadmap-num" aria-hidden="true">2</span>
+                <div>
+                  <p className="rc-roadmap-title">Approve {amountLabel} {tokenSymbol}</p>
+                  <p className="rc-roadmap-desc">
+                    Lets the escrow pull exactly {amountLabel} {tokenSymbol} from your wallet. On-chain,
+                    manual gas limit {GAS_LIMITS.approve.toLocaleString()}.
+                  </p>
+                </div>
               </li>
-              <li className="rounded-lg bg-white/[0.04] p-3.5">
-                <p className="text-[15px] font-semibold">
-                  <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#35E0FF]/15 text-[13px] font-bold text-[#35E0FF]">3</span>
-                  Open the receipt
-                </p>
-                <p className="mt-1.5 pl-8 text-[13px] leading-5 text-[#F4FEFF]/55">
-                  Locks {amountLabel} {tokenSymbol} in escrow. Sent through the Memo contract so the
-                  receipt is anchored on-chain. Manual gas limit {GAS_LIMITS.authorize.toLocaleString()}.
-                </p>
+              <li>
+                <span className="rc-roadmap-num" aria-hidden="true">3</span>
+                <div>
+                  <p className="rc-roadmap-title">Open the receipt</p>
+                  <p className="rc-roadmap-desc">
+                    Locks {amountLabel} {tokenSymbol} in escrow. Sent through the Memo contract so the
+                    receipt is anchored on-chain. Manual gas limit {GAS_LIMITS.authorize.toLocaleString()}.
+                  </p>
+                </div>
               </li>
             </ol>
 
-            <div className="mt-4 rounded-lg bg-[#F4EFE6] p-3.5 text-[#0B1220]">
-              <p className="text-sm font-semibold">Buyer protection window: 5 minutes</p>
-              <p className="mt-0.5 text-[13px] leading-5">
+            <div className="rcx-paperband" style={{ marginTop: 20 }}>
+              <p className="rcx-eyebrow">Buyer protection window</p>
+              <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800 }}>5 minutes, enforced on-chain</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "rgba(11,18,32,.72)" }}>
                 After the seller says they delivered, you have 300 seconds on-chain to check
                 and dispute. No dispute → the seller gets paid.
               </p>
             </div>
 
-            <details className="mt-4 text-[13px] text-[#F4FEFF]/55">
-              <summary className="cursor-pointer font-medium text-[#F4FEFF]/75">
-                Advanced: exact transaction data
-              </summary>
-              <div className="mt-2 space-y-1.5 font-mono text-[12px] break-all">
+            <details className="rc-new-details">
+              <summary>Advanced: exact transaction data</summary>
+              <div className="rc-tech">
                 <p>token: {tokenSymbol} ({tokenCfg.token})</p>
                 <p>escrow: {tokenCfg.escrow}</p>
                 <p>approve({shortHex(tokenCfg.escrow)}, {amountUnits !== null ? amountUnits.toString() : "—"} base units)</p>
@@ -617,151 +673,165 @@ export default function NewReceiptPage() {
                   authorize(paymentId, termsHash, seller, amount, deadline) via
                   memo(target=escrow, …) — paymentId derived at submit time:
                 </p>
-                <p className="text-[#F4FEFF]/40">
+                <p>
                   paymentId = keccak256(buyer ‖ seller ‖ amount ‖ termsHash ‖ blockNumber ‖ salt)
                 </p>
-                <p className="text-[#F4FEFF]/40">
+                <p>
                   termsHash = sha256 of the canonical signed terms JSON (computed at signing).
                 </p>
               </div>
             </details>
-          </div>
+          </section>
 
           {/* action bar — ONE primary button per screen (§7.1) */}
-          <div className="mt-6">
+          <div className="rc-new-actions">
             {gate.known && !gate.ok && (
-              <div className="mb-3 rounded-lg border border-red-400/30 bg-red-400/10 p-3.5" role="alert">
-                <p className="text-sm font-medium text-red-300">{gate.message}</p>
+              <div className="rcx-note rcx-note-error" role="alert">
+                <p style={{ margin: "0 0 6px", fontWeight: 800 }}>Not enough balance to open this receipt.</p>
+                <p style={{ margin: 0 }}>{gate.message}</p>
                 {gate.shortfall && (
-                  <p className="mt-1 text-[13px] text-[#F4FEFF]/55">{gate.shortfall}</p>
+                  <p style={{ margin: "6px 0 0", opacity: 0.8 }}>{gate.shortfall}</p>
                 )}
               </div>
             )}
             {balancesLoading && buyer && (
-              <div className="mb-3 space-y-2" aria-label="Checking balance">
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-1/2" />
+              <div className="rcx-note" aria-label="Checking balance" style={{ display: "grid", gap: 10 }}>
+                <div className="rcx-skel" style={{ height: 14, width: "65%" }} />
+                <div className="rcx-skel" style={{ height: 14, width: "48%" }} />
               </div>
             )}
             {!buyer ? (
-              <button
-                type="button"
-                onClick={onConnect}
-                disabled={connecting}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#35E0FF] px-6 py-2.5 text-[15px] font-bold text-[#0B1220] disabled:opacity-50"
-              >
-                {connecting && <Spinner />}
-                {connecting ? "Connecting…" : "Connect wallet"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={onConnect}
+                  disabled={connecting}
+                  className="rcx-btn rcx-btn-primary"
+                >
+                  {connecting && <Spinner />}
+                  {connecting ? "Connecting…" : "Connect wallet to open receipt"}
+                </button>
+                <p className="rcx-hint" style={{ marginTop: 12 }}>
+                  Connect a wallet first — any wallet can open a receipt.
+                </p>
+              </>
             ) : (
-              <button
-                type="submit"
-                disabled={submitDisabled}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#35E0FF] px-6 py-2.5 text-[15px] font-bold text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {running && <Spinner />}
-                {running ? "Opening…" : "Open receipt"}
-              </button>
-            )}
-            {!buyer && (
-              <p className="mt-2 text-sm text-[#F4FEFF]/50">
-                Connect a wallet first — any wallet can open a receipt.
-              </p>
-            )}
-            {buyer && !isValid && (
-              <p className="mt-2 text-sm text-[#F4FEFF]/50">
-                Fill in the highlighted fields above to continue.
-              </p>
+              <>
+                <button
+                  type="submit"
+                  disabled={submitDisabled}
+                  className="rcx-btn rcx-btn-primary"
+                  style={{ minWidth: 220 }}
+                >
+                  {running && <Spinner />}
+                  {running ? "Opening…" : "Open receipt"}
+                </button>
+                {!isValid && (
+                  <p className="rcx-hint" style={{ marginTop: 12 }}>
+                    Fill in the highlighted fields above to continue.
+                  </p>
+                )}
+                {buyer && amountUnits !== null && (!gate.known || !gate.ok) && isValid && (
+                  <p className="rcx-hint" style={{ marginTop: 12 }}>
+                    {gate.known
+                      ? "Top up the shortfall above — the button unlocks when the balance covers it."
+                      : "Checking your balance…"}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </form>
 
         {/* progress — every state change announces itself (§7.5) */}
         {showProgress && (
-          <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:p-6" aria-live="polite">
-            <h2 className="text-lg font-bold">Progress</h2>
-            <ol className="mt-4 space-y-4">
-              {steps.map((s) => (
-                <li key={s.n} className="flex gap-3">
-                  <span
-                    className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[13px] font-bold ${
-                      s.phase === "done"
-                        ? "bg-[#35E0FF]/20 text-[#35E0FF]"
-                        : s.phase === "error"
-                          ? "bg-red-400/20 text-red-300"
-                          : "bg-white/10 text-[#F4FEFF]/60"
-                    }`}
-                    aria-hidden
-                  >
-                    {s.phase === "done" ? (
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z" clipRule="evenodd" />
-                      </svg>
-                    ) : s.phase === "signing" || s.phase === "pending" ? (
-                      <Spinner className="h-3.5 w-3.5" />
-                    ) : s.phase === "error" ? (
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4.3 4.3a1 1 0 011.4 0L10 8.6l4.3-4.3a1 1 0 111.4 1.4L11.4 10l4.3 4.3a1 1 0 01-1.4 1.4L10 11.4l-4.3 4.3a1 1 0 01-1.4-1.4L8.6 10 4.3 5.7a1 1 0 010-1.4z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      s.n
-                    )}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[15px] font-semibold">{s.title}</p>
-                    <p className="text-[13px] leading-5 text-[#F4FEFF]/55">{s.hint}</p>
-                    {s.phase === "pending" && s.txHash && (
-                      <p className="mt-1 text-[13px] text-amber-300">
-                        Waiting for confirmation —{" "}
-                        <a
-                          href={explorerTxUrl(s.txHash)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-mono underline"
-                        >
-                          {shortHex(s.txHash)}
-                        </a>
-                      </p>
-                    )}
-                    {s.phase === "done" && s.txHash && (
-                      <p className="mt-1 text-[13px]">
-                        <a
-                          href={explorerTxUrl(s.txHash)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-mono text-[#35E0FF] underline"
-                        >
-                          {shortHex(s.txHash)}
-                        </a>
-                      </p>
-                    )}
-                  </div>
-                </li>
-              ))}
+          <section className="rc-new-card rcx-rise" aria-live="polite" aria-label="Progress">
+            <div className="rc-new-card-head" style={{ marginBottom: 6 }}>
+              <span className="rc-new-num" aria-hidden="true" style={{ borderStyle: "dashed" }}>✓</span>
+              <div>
+                <h2>Progress</h2>
+                <p>Each step announces itself here. Done means mined on-chain — never earlier.</p>
+              </div>
+            </div>
+            <ol className="rc-progress">
+              {steps.map((s) => {
+                const stateCls =
+                  s.phase === "done" ? "is-done"
+                  : s.phase === "error" ? "is-error"
+                  : s.phase === "signing" || s.phase === "pending" ? "is-active"
+                  : "";
+                return (
+                  <li key={s.n} className={`rc-progress-step ${stateCls}`}>
+                    <span className="rc-progress-marker" aria-hidden="true">
+                      {s.phase === "done" ? (
+                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : s.phase === "signing" || s.phase === "pending" ? (
+                        <Spinner />
+                      ) : s.phase === "error" ? (
+                        <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.3 4.3a1 1 0 011.4 0L10 8.6l4.3-4.3a1 1 0 111.4 1.4L11.4 10l4.3 4.3a1 1 0 01-1.4 1.4L10 11.4l-4.3 4.3a1 1 0 01-1.4-1.4L8.6 10 4.3 5.7a1 1 0 010-1.4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        s.n
+                      )}
+                    </span>
+                    <div className="rc-progress-body">
+                      <p className="rc-progress-title">{s.title}</p>
+                      <p className="rc-progress-desc">{s.hint}</p>
+                      {s.phase === "pending" && s.txHash && (
+                        <p className="rc-progress-tx is-pending">
+                          Waiting for confirmation —{" "}
+                          <a
+                            href={explorerTxUrl(s.txHash)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {shortHex(s.txHash)} ↗
+                          </a>
+                        </p>
+                      )}
+                      {s.phase === "done" && s.txHash && (
+                        <p className="rc-progress-tx">
+                          <a
+                            href={explorerTxUrl(s.txHash)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {shortHex(s.txHash)} ↗
+                          </a>
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ol>
             {fatal && (
-              <div className="mt-4 rounded-lg border border-red-400/30 bg-red-400/10 p-3.5" role="alert">
-                <p className="text-sm text-red-300">{fatal}</p>
+              <div className="rcx-note rcx-note-error" style={{ marginTop: 18 }} role="alert">
+                <p style={{ margin: "0 0 6px", fontWeight: 800 }}>That didn&apos;t go through.</p>
+                <p style={{ margin: 0 }}>{fatal}</p>
                 {paymentIdTaken && openedPaymentId && (
-                  <p className="mt-2 text-sm">
-                    <Link to={`/dashboard/r/${openedPaymentId}`} className="font-medium text-[#35E0FF] underline">
-                      View the existing receipt
+                  <p style={{ margin: "10px 0 0" }}>
+                    <Link to={`/dashboard/r/${openedPaymentId}`} style={{ color: "#35E0FF", fontWeight: 700 }}>
+                      View the existing receipt →
                     </Link>
                   </p>
                 )}
                 {!paymentIdTaken && (
-                  <p className="mt-1 text-[13px] text-[#F4FEFF]/55">
+                  <p style={{ margin: "6px 0 0", opacity: 0.8 }}>
                     Nothing was locked — only gas for mined transactions was spent. Fix the issue and try again.
                   </p>
                 )}
               </div>
             )}
-          </div>
+          </section>
         )}
 
         {/* trust disclosure, first screen — bible §2 learnings */}
-        <p className="mt-6 max-w-[60ch] text-[13px] leading-5 text-[#F4FEFF]/45">
-          *What you're trusting: the seller's delivery claim is just that — a claim. Your leverage
+        <p className="rc-new-fineprint">
+          *What you&apos;re trusting: the seller&apos;s delivery claim is just that — a claim. Your leverage
           is the 5-minute protection window plus the permanent on-chain record. Dispute inside the
           window and anyone can close the receipt with your {tokenSymbol} returned on-chain.
         </p>

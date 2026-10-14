@@ -1,0 +1,452 @@
+/* NewReceiptPage — open a receipt. Premium form craft on the calm app
+   shell (tokens + primitives in src/styles/app.css). Numbered section
+   cards, a token selector worthy of the real icons, a signing roadmap,
+   and a live progress timeline. Logic untouched — this is pure dress. */
+
+.rc-new-inner {
+  max-width: 58rem;
+  margin: 0 auto;
+  padding: 40px clamp(20px, 4vw, 48px) 72px;
+}
+
+.rc-backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rcx-cyan);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 44px;
+  margin-bottom: 18px;
+}
+.rc-backlink:hover {
+  text-decoration: underline;
+}
+
+.rc-new-head {
+  margin-bottom: 30px;
+}
+
+/* ---------- section cards ---------- */
+.rc-new-card {
+  background: var(--rcx-ink-2);
+  border: 1px solid var(--rcx-line);
+  border-radius: 20px;
+  padding: clamp(22px, 3.4vw, 34px);
+  margin-top: 20px;
+}
+
+.rc-new-card-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.rc-new-num {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(53, 224, 255, 0.1);
+  border: 1px solid rgba(53, 224, 255, 0.4);
+  color: var(--rcx-cyan);
+  font-weight: 800;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rc-new-card-head h2 {
+  margin: 2px 0 4px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.rc-new-card-head p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--rcx-muted);
+}
+
+/* ---------- wallet strip ---------- */
+.rc-new-wallet {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.rc-wallet-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--rcx-cyan);
+  box-shadow: 0 0 0 4px rgba(53, 224, 255, 0.16);
+  flex: 0 0 11px;
+}
+
+.rc-new-wallet .rcx-mono {
+  color: var(--rcx-cyan);
+  font-size: 14px;
+}
+
+/* ---------- token selector ---------- */
+.rc-token-opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.rc-token-opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1.5px solid var(--rcx-line);
+  background: rgba(11, 18, 32, 0.5);
+  color: var(--rcx-ice);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.rc-token-opt:hover {
+  border-color: rgba(244, 254, 255, 0.3);
+}
+
+.rc-token-opt.is-selected {
+  border-color: var(--rcx-cyan);
+  background: rgba(53, 224, 255, 0.07);
+}
+
+.rc-token-opt-icon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: 999px;
+  background: var(--rcx-paper);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(11, 18, 32, 0.1);
+}
+
+.rc-token-opt-icon img {
+  border-radius: 999px;
+  display: block;
+  image-rendering: auto;
+}
+
+.rc-token-opt-name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.rc-token-opt-sub {
+  font-size: 12.5px;
+  color: var(--rcx-muted);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+
+.rc-token-opt-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--rcx-cyan);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.rc-token-opt.is-selected .rc-token-opt-check {
+  display: inline-flex;
+}
+
+/* ---------- form fields ---------- */
+.rc-field {
+  margin-top: 22px;
+}
+.rc-field:first-of-type {
+  margin-top: 0;
+}
+
+/* ---------- signing roadmap ---------- */
+.rc-roadmap {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.rc-roadmap li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: rgba(244, 254, 255, 0.03);
+  border: 1px solid var(--rcx-line-soft);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.rc-roadmap-num {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(53, 224, 255, 0.12);
+  color: var(--rcx-cyan);
+  font-size: 13.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.rc-roadmap-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.rc-roadmap-title .rc-roadmap-free {
+  font-weight: 600;
+  color: var(--rcx-muted);
+}
+
+.rc-roadmap-desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--rcx-muted);
+}
+
+/* ---------- advanced details ---------- */
+.rc-new-details {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--rcx-muted);
+}
+
+.rc-new-details summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--rcx-ice);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rc-new-details summary:hover {
+  color: var(--rcx-cyan);
+}
+
+.rc-new-details .rc-tech {
+  margin-top: 10px;
+  font-family: var(--rcx-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  word-break: break-all;
+  background: rgba(11, 18, 32, 0.6);
+  border: 1px solid var(--rcx-line-soft);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.rc-new-details .rc-tech p {
+  margin: 0 0 6px;
+}
+
+/* ---------- action bar ---------- */
+.rc-new-actions {
+  margin-top: 24px;
+}
+
+.rc-new-actions .rcx-note {
+  margin-bottom: 14px;
+}
+
+/* ---------- progress timeline ---------- */
+.rc-progress {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.rc-progress-step {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  padding-bottom: 26px;
+}
+
+.rc-progress-step:last-child {
+  padding-bottom: 0;
+}
+
+.rc-progress-step::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 36px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--rcx-line);
+  border-radius: 2px;
+}
+
+.rc-progress-step:last-child::before {
+  display: none;
+}
+
+.rc-progress-step.is-done::before {
+  background: rgba(53, 224, 255, 0.45);
+}
+
+.rc-progress-marker {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--rcx-ink-3);
+  border: 1px solid var(--rcx-line);
+  color: var(--rcx-muted);
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rc-progress-step.is-active .rc-progress-marker {
+  border-color: var(--rcx-cyan);
+  color: var(--rcx-cyan);
+}
+
+.rc-progress-step.is-done .rc-progress-marker {
+  background: var(--rcx-cyan);
+  border-color: var(--rcx-cyan);
+  color: #06222b;
+}
+
+.rc-progress-step.is-error .rc-progress-marker {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: var(--rcx-danger);
+  color: var(--rcx-danger);
+}
+
+.rc-progress-body {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.rc-progress-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.rc-progress-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--rcx-muted);
+  margin: 4px 0 0;
+}
+
+.rc-progress-tx {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.rc-progress-tx a {
+  font-family: var(--rcx-mono);
+  font-size: 12.5px;
+  color: var(--rcx-cyan);
+}
+
+.rc-progress-tx.is-pending {
+  color: var(--rcx-warn);
+}
+
+/* button-internal spinner */
+.rc-spin {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2.5px solid rgba(6, 34, 43, 0.3);
+  border-top-color: currentColor;
+  animation: rcx-spin 0.8s linear infinite;
+  flex: 0 0 16px;
+}
+@keyframes rcx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- GetEurcPanel, nested in the form ---------- */
+.rc-new .gep {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.rc-new .gep-head {
+  margin-bottom: 4px;
+}
+
+.rc-new .gep-paths {
+  grid-template-columns: 1fr;
+  margin-top: 18px;
+}
+
+@media (min-width: 720px) {
+  .rc-new .gep-paths {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rc-new .gep-path:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .rc-token-opts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-spin {
+    animation: none;
+  }
+}
+
+/* ---------- fine print ---------- */
+.rc-new-fineprint {
+  margin: 28px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--rcx-faint);
+  max-width: 62ch;
+}

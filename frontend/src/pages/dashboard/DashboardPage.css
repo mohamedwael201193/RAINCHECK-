@@ -1,82 +1,94 @@
-/* RAINCHECK dashboard — receipt list.
-   DESIGN STANDARD §9 tokens (binding): bg #0B1220, accent #35E0FF,
-   paper #F4EFE6, text #F4FEFF. No third accent color.
-   Dashboard card anatomy (§6): CardHeader = label + badge,
-   CardContent = value. No glow, no tilt, no marketing effects. */
+/* RAINCHECK dashboard — the receipt ledger.
+   App shell primitives live in src/styles/app.css (tokens, buttons,
+   pills, empty states, motion). This file owns the dashboard layout:
+   header, honest stats strip, filter tabs, and the ticket cards. */
 
-.rc-dash {
-  --rc-bg: #0b1220;
-  --rc-accent: #35e0ff;
-  --rc-paper: #f4efe6;
-  --rc-text: #f4feff;
-  --rc-card: #101a2e;
-  --rc-rule: rgba(244, 254, 255, 0.14);
-  --rc-muted: rgba(244, 254, 255, 0.62);
-  --rc-faint: rgba(244, 254, 255, 0.42);
-  background: var(--rc-bg);
-  color: var(--rc-text);
-  min-height: 100svh;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    system-ui;
-  -webkit-font-smoothing: antialiased;
-}
-
-.rc-dash-inner {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 48px clamp(20px, 4vw, 56px) 64px;
-}
-
-/* ---------- header: one primary action ---------- */
 .rc-dash-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
+  margin-bottom: 8px;
 }
 
-.rc-dash-title {
-  font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  margin: 0;
-  line-height: 1;
+.rc-dash-head-copy {
+  max-width: 46rem;
 }
 
-.rc-dash-sub {
-  margin: 8px 0 0;
-  color: var(--rc-muted);
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.rc-dash-cta {
-  display: inline-flex;
+.rc-dash-cta-row {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  background: var(--rc-accent);
-  color: var(--rc-bg);
-  text-decoration: none;
+  gap: 12px;
+}
+
+/* ---------- honest stats strip (all values computed from live data) ---------- */
+.rc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 28px 0 0;
+}
+
+.rc-stat {
+  background: var(--rcx-ink-2, #0d1728);
+  border: 1px solid var(--rcx-line, rgba(244, 254, 255, 0.1));
+  border-radius: 16px;
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+.rc-stat-label {
+  font-size: 11.5px;
   font-weight: 800;
-  font-size: 0.95rem;
-  padding: 12px 24px;
-  border-radius: 999px;
-  transition: opacity 0.2s ease;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rcx-faint, rgba(244, 254, 255, 0.4));
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.rc-dash-cta:hover {
-  opacity: 0.88;
+.rc-stat-value {
+  font-family: var(--rcx-display, "Archivo Black", Inter, system-ui);
+  font-size: clamp(22px, 2.6vw, 30px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
-/* ---------- filter chips ---------- */
+.rc-stat-value .rc-stat-num {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rc-stat-value.is-cyan {
+  color: var(--rcx-cyan, #35e0ff);
+}
+
+.rc-stat-sub {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--rcx-muted, rgba(244, 254, 255, 0.64));
+}
+
+/* ---------- filter tabs ---------- */
 .rc-dash-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 28px;
+  margin-top: 24px;
+  padding: 6px;
+  background: rgba(11, 18, 32, 0.55);
+  border: 1px solid var(--rcx-line, rgba(244, 254, 255, 0.1));
+  border-radius: 999px;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .rc-chip {
@@ -84,43 +96,44 @@
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  border: 1px solid var(--rc-rule);
+  border: 1px solid transparent;
   background: transparent;
-  color: var(--rc-text);
+  color: var(--rcx-muted, rgba(244, 254, 255, 0.64));
   font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 18px;
   border-radius: 999px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
 }
 
 .rc-chip:hover {
-  border-color: var(--rc-accent);
+  color: var(--rcx-ice, #f4feff);
 }
 
 .rc-chip-active {
-  background: var(--rc-text);
-  border-color: var(--rc-text);
-  color: var(--rc-bg);
+  background: var(--rcx-cyan, #35e0ff);
+  color: #06222b;
 }
 
 .rc-chip-count {
-  font-size: 0.75rem;
-  font-weight: 700;
-  background: var(--rc-rule);
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: rgba(244, 254, 255, 0.1);
   border-radius: 999px;
-  padding: 1px 8px;
-  min-width: 1.5em;
+  padding: 2px 9px;
+  min-width: 1.6em;
   text-align: center;
 }
 
 .rc-chip-active .rc-chip-count {
-  background: rgba(11, 18, 32, 0.16);
+  background: rgba(6, 34, 43, 0.18);
 }
 
-/* ---------- cards grid ---------- */
+/* ---------- ticket cards ---------- */
 .rc-dash-body {
   margin-top: 24px;
 }
@@ -137,255 +150,211 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1080px) {
   .rc-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-/* shadcn card anatomy: header = label + badge, content = value */
-.rc-card {
+/* The ticket: a receipt you can hold. Dark stub on top, perforation,
+   warm-paper amount tear at the bottom. Whole card is one link. */
+.rc-ticket {
+  position: relative;
   display: block;
-  background: var(--rc-card);
-  border: 1px solid var(--rc-rule);
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--rcx-ink-2, #0d1728);
+  border: 1px solid var(--rcx-line, rgba(244, 254, 255, 0.1));
+  border-radius: 18px;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.2s ease;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
-a.rc-card:hover {
-  border-color: var(--rc-accent);
+a.rc-ticket:hover {
+  border-color: rgba(53, 224, 255, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(3, 8, 18, 0.55);
 }
 
-.rc-card-head {
+a.rc-ticket:active {
+  transform: translateY(-1px);
+}
+
+.rc-ticket-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 18px 20px 14px;
 }
 
-.rc-card-label {
-  font-size: 0.72rem;
+.rc-ticket-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--rc-muted);
+  color: var(--rcx-muted, rgba(244, 254, 255, 0.64));
 }
 
-.rc-card-value {
-  margin-top: 14px;
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
+.rc-ticket-label svg {
+  width: 15px;
+  height: 15px;
+  color: var(--rcx-cyan, #35e0ff);
 }
 
-.rc-card-unit {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--rc-muted);
-  margin-left: 8px;
-  display: inline-flex;
+.rc-ticket-amount {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  vertical-align: middle;
+  gap: 12px;
+  padding: 6px 20px 18px;
 }
 
-.rc-card-meta {
-  margin-top: 12px;
-  font-size: 0.85rem;
-  color: var(--rc-text);
-}
-
-.rc-card-meta-dim {
-  margin-top: 4px;
-  font-size: 0.8rem;
-  color: var(--rc-muted);
-}
-
-.rc-mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-/* ---------- status pills: one accent only (§9) ---------- */
-.rc-pill {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
+.rc-token-ring {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
   border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border: 1px solid transparent;
-  cursor: help;
+  background: var(--rcx-paper, #f4efe6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(11, 18, 32, 0.12);
+}
+
+.rc-token-ring img {
+  border-radius: 999px;
+  display: block;
+}
+
+.rc-ticket-figure {
+  min-width: 0;
+}
+
+.rc-ticket-value {
+  display: block;
+  font-family: var(--rcx-display, "Archivo Black", Inter, system-ui);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rc-pill-open {
-  background: var(--rc-accent);
-  color: var(--rc-bg);
-}
-
-.rc-pill-attested {
-  background: transparent;
-  color: var(--rc-accent);
-  border-color: var(--rc-accent);
-}
-
-.rc-pill-flagged {
-  background: var(--rc-paper);
-  color: var(--rc-bg);
-}
-
-.rc-pill-captured {
-  background: transparent;
-  color: var(--rc-muted);
-  border-color: var(--rc-rule);
-}
-
-.rc-pill-voided {
-  background: transparent;
-  color: var(--rc-faint);
-  border-color: transparent;
-}
-
-/* ---------- skeletons: regions, never blank space ---------- */
-.rc-skeleton {
-  pointer-events: none;
-}
-
-.rc-sk {
-  border-radius: 6px;
-  background: linear-gradient(
-    100deg,
-    rgba(244, 254, 255, 0.06) 40%,
-    rgba(244, 254, 255, 0.14) 50%,
-    rgba(244, 254, 255, 0.06) 60%
-  );
-  background-size: 200% 100%;
-  animation: rc-sk-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes rc-sk-pulse {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rc-sk {
-    animation: none;
-    background: rgba(244, 254, 255, 0.08);
-  }
-}
-
-.rc-sk-label {
-  height: 12px;
-  width: 5rem;
-}
-
-.rc-sk-pill {
-  height: 24px;
-  width: 5.5rem;
-  border-radius: 999px;
-}
-
-.rc-sk-value {
-  height: 38px;
-  width: 9rem;
-  margin-top: 14px;
-}
-
-.rc-sk-meta {
-  height: 13px;
-  width: 11rem;
-  margin-top: 12px;
-}
-
-.rc-sk-meta2 {
-  height: 12px;
-  width: 8rem;
-  margin-top: 8px;
-}
-
-/* ---------- error: plain language, adjacent to the failed list ---------- */
-.rc-error {
-  border: 1px solid var(--rc-rule);
-  border-left: 3px solid var(--rc-accent);
-  background: var(--rc-card);
-  border-radius: 12px;
-  padding: 32px;
-  max-width: 36rem;
-}
-
-.rc-error-title {
-  font-size: 1.1rem;
+.rc-ticket-sym {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
   font-weight: 800;
-  margin: 0;
+  letter-spacing: 0.1em;
+  color: var(--rcx-muted, rgba(244, 254, 255, 0.64));
 }
 
-.rc-error-msg {
-  margin: 8px 0 0;
-  color: var(--rc-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
+/* perforation — the tear between stub and paper */
+.rc-ticket-perf {
+  position: relative;
+  height: 0;
+  border-top: 2px dashed rgba(244, 254, 255, 0.16);
+  margin: 0 20px;
 }
 
-.rc-error-retry {
-  margin-top: 18px;
-  min-height: 44px;
-  background: var(--rc-accent);
-  color: var(--rc-bg);
-  border: none;
-  font: inherit;
-  font-weight: 800;
-  font-size: 0.9rem;
-  padding: 10px 24px;
+.rc-ticket-perf::before,
+.rc-ticket-perf::after {
+  content: "";
+  position: absolute;
+  top: -11px;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
-  cursor: pointer;
+  background: var(--rcx-ink, #0b1220);
+  border: 1px solid var(--rcx-line, rgba(244, 254, 255, 0.1));
 }
 
-/* ---------- empty state: icon + one line + one CTA ---------- */
-.rc-empty {
-  border: 1px dashed var(--rc-rule);
-  border-radius: 12px;
-  padding: 56px 32px;
-  text-align: center;
+.rc-ticket-perf::before {
+  left: -31px;
+}
+.rc-ticket-perf::after {
+  right: -31px;
+}
+
+.rc-ticket-stub {
+  margin-top: 0;
+  background: var(--rcx-paper, #f4efe6);
+  color: var(--rcx-ink, #0b1220);
+  padding: 16px 20px 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.rc-ticket-row {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  min-width: 0;
 }
 
-.rc-empty-icon {
-  width: 48px;
-  height: 48px;
-  color: var(--rc-accent);
-  margin-bottom: 16px;
+.rc-ticket-k {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(11, 18, 32, 0.52);
+  flex: 0 0 auto;
 }
 
-.rc-empty-line {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin: 0;
+.rc-ticket-v {
+  font-family: var(--rcx-mono, ui-monospace, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rcx-ink, #0b1220);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
-.rc-empty .rc-dash-cta,
-.rc-empty .rc-chip {
-  margin-top: 20px;
+.rc-ticket-v-dim {
+  color: rgba(11, 18, 32, 0.62);
+  font-family: var(--rcx-sans, Inter, system-ui);
+  font-size: 12.5px;
 }
 
-/* ---------- footer note ---------- */
+/* skeleton tickets */
+.rc-ticket-skel {
+  pointer-events: none;
+  min-height: 252px;
+  padding: 18px 20px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+/* ---------- states ---------- */
+.rc-dash-error {
+  max-width: 38rem;
+}
+
 .rc-dash-note {
   margin-top: 40px;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  color: var(--rc-faint);
-  max-width: 60ch;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--rcx-faint, rgba(244, 254, 255, 0.4));
+  max-width: 62ch;
+}
+
+@media (max-width: 640px) {
+  .rc-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rc-dash-chips {
+    border-radius: 20px;
+    width: 100%;
+  }
 }

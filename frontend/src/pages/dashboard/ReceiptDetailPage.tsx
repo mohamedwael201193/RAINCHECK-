@@ -21,6 +21,8 @@ import {
 } from "../../components/ui/alert-dialog";
 import { Toaster, toast } from "../../components/ui/sonner";
 import TokenIcon from "../../components/TokenIcon";
+import AppHeader from "../../components/dashboard/AppHeader";
+import "../../styles/app.css";
 import {
   type ActionKind,
   type ActionTxPreview,
@@ -613,51 +615,66 @@ export default function ReceiptDetailPage() {
 
   if (load.kind === "loading") {
     return (
-      <div className="rc-detail">
-        <Toaster />
-        <div className="rc-skeleton rc-skeleton-title" />
-        <div className="rc-skeleton" />
-        <div className="rc-skeleton" />
-        <div className="rc-skeleton" />
+      <div className="rcx">
+        <AppHeader />
+        <div className="rc-detail">
+          <Toaster />
+          <div className="rc-skeleton rc-skeleton-title" />
+          <div className="rc-skeleton" />
+          <div className="rc-skeleton" />
+          <div className="rc-skeleton" />
+        </div>
       </div>
     );
   }
 
   if (load.kind !== "ready") {
     return (
-      <div className="rc-detail">
-        <Toaster />
-        <Link to="/dashboard" className="rc-back">
-          ← All receipts
-        </Link>
-        <div className="rc-panel rc-panel-error" role="alert">
-          <h1>Couldn&apos;t load this receipt</h1>
-          {"message" in load && <p>{load.message}</p>}
-          {load.kind === "invalid-id" && (
-            <p>
-              Expected a paymentId like <code>0x…</code> (64 hex chars).
-            </p>
-          )}
-          <button
-            className="rc-btn rc-btn-primary"
-            onClick={() => setRefreshTick((t) => t + 1)}
-          >
-            Retry
-          </button>
+      <div className="rcx">
+        <AppHeader />
+        <div className="rc-detail">
+          <Toaster />
+          <Link to="/dashboard" className="rc-back">
+            ← All receipts
+          </Link>
+          <div className="rc-panel rc-panel-error" role="alert">
+            <h1>Couldn&apos;t load this receipt</h1>
+            {"message" in load && <p>{load.message}</p>}
+            {load.kind === "invalid-id" && (
+              <p>
+                Expected a paymentId like <code>0x…</code> (64 hex chars).
+              </p>
+            )}
+            <button
+              className="rc-btn rc-btn-primary"
+              onClick={() => setRefreshTick((t) => t + 1)}
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   const r = receipt as ReceiptDetail;
-  const pillClass =
-    status === "CAPTURED"
-      ? "rc-pill rc-pill-captured"
-      : status === "VOIDED"
-        ? "rc-pill rc-pill-voided"
-        : status === "FLAGGED"
-          ? "rc-pill rc-pill-flagged"
-          : "rc-pill";
+  const pillKey = (() => {
+    switch (status) {
+      case "OPEN":
+        return "open";
+      case "ATTESTED":
+        return "attested";
+      case "FLAGGED":
+        return "flagged";
+      case "CAPTURED":
+        return "captured";
+      case "VOIDED":
+        return "voided";
+      default:
+        return "unknown";
+    }
+  })();
+  const pillClass = `rcx-pill rcx-pill-${pillKey}`;
   const meaning = STATUS_MEANING[status];
   const chainWindowSecs = chain ? Number(chain.challengeWindow) : null;
 
@@ -667,17 +684,31 @@ export default function ReceiptDetailPage() {
   const canVoidAfterDeadline = status === "OPEN" && deadlinePassed === true;
 
   return (
-    <div className="rc-detail">
+    <div className="rcx">
+      <AppHeader />
+      <div className="rc-detail">
       <Toaster />
       <Link to="/dashboard" className="rc-back">
         ← All receipts
       </Link>
 
-      {/* (1) Header: status pill + plain meaning --------------------------- */}
-      <header className="rc-panel rc-header">
+      {/* (1) Header: status pill + plain meaning + locked amount ---------- */}
+      <header className="rc-panel rc-header rcx-rise">
         <div className="rc-header-top">
           <span className={pillClass}>{status}</span>
           {meaning && <p className="rc-meaning">{meaning}</p>}
+        </div>
+        <div className="rc-header-amount">
+          <span className="rc-header-tokenring" aria-hidden="true">
+            <TokenIcon token={symbol} size={40} />
+          </span>
+          <div>
+            <p className="rc-header-value">
+              {formatUSDC(r.amount)}{" "}
+              <span className="rc-header-sym">{symbol}</span>
+            </p>
+            <p className="rc-header-cap">locked in escrow</p>
+          </div>
         </div>
         <h1 className="rc-payment-id" title={r.paymentId}>
           {shortHex(r.paymentId, 10, 8)}
@@ -1468,6 +1499,7 @@ export default function ReceiptDetailPage() {
           </li>
         </ul>
       </section>
+      </div>
     </div>
   );
 }

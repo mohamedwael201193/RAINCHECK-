@@ -1,0 +1,480 @@
+/* RAINCHECK app shell — shared design system for every app screen.
+   Identity (design-standard §9): ink navy #0B1220, rain cyan #35E0FF,
+   warm paper #F4EFE6, ice #F4FEFF. One accent only — cyan is earned
+   (CTAs, key figures, status markers), never body text, never washes.
+
+   App screens are calm and functional — the landing does the theatrics.
+   Every screen shares this shell so the product feels like one designed
+   object: slim top bar, hairline panels, ticket motifs for the receipt
+   theme, restrained motion (opacity + translateY only, ≤0.8s). */
+
+.rcx {
+  --rcx-ink: #0b1220;
+  --rcx-ink-2: #0d1728;
+  --rcx-ink-3: #111d33;
+  --rcx-cyan: #35e0ff;
+  --rcx-paper: #f4efe6;
+  --rcx-ice: #f4feff;
+  --rcx-line: rgba(244, 254, 255, 0.1);
+  --rcx-line-soft: rgba(244, 254, 255, 0.06);
+  --rcx-muted: rgba(244, 254, 255, 0.64);
+  --rcx-faint: rgba(244, 254, 255, 0.4);
+  --rcx-danger: #f87171;
+  --rcx-warn: #fbbf24;
+  --rcx-display: "Archivo Black", "Inter", system-ui, -apple-system;
+  --rcx-sans: "Inter", system-ui, -apple-system;
+  --rcx-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  background-color: var(--rcx-ink);
+  background-image: radial-gradient(
+    70% 34% at 50% -6%,
+    rgba(53, 224, 255, 0.055),
+    transparent 72%
+  );
+  color: var(--rcx-ice);
+  font-family: var(--rcx-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh;
+}
+
+.rcx-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 40px clamp(20px, 4vw, 48px) 72px;
+}
+
+/* ---------- app top bar ---------- */
+
+.rcx-appbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--rcx-line-soft);
+  background: rgba(11, 18, 32, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.rcx-appbar-in {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rcx-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--rcx-ice);
+  font-family: var(--rcx-display);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  min-height: 44px;
+}
+
+.rcx-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--rcx-cyan);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+}
+
+.rcx-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.rcx-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.rcx-navlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--rcx-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.rcx-navlink:hover {
+  color: var(--rcx-ice);
+  background: rgba(244, 254, 255, 0.05);
+}
+
+.rcx-navlink.is-active {
+  color: var(--rcx-cyan);
+  background: rgba(53, 224, 255, 0.09);
+}
+
+.rcx-appbar-cta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: var(--rcx-cyan);
+  color: #06222b;
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.rcx-appbar-cta:hover {
+  filter: brightness(1.07);
+}
+
+.rcx-appbar-cta svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------- shared primitives ---------- */
+
+.rcx-eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--rcx-cyan);
+  margin: 0 0 12px;
+}
+
+.rcx-title {
+  font-family: var(--rcx-display);
+  font-size: clamp(34px, 5vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.rcx-sub {
+  margin: 12px 0 0;
+  color: var(--rcx-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.rcx-panel {
+  background: var(--rcx-ink-2);
+  border: 1px solid var(--rcx-line);
+  border-radius: 18px;
+  padding: clamp(20px, 3vw, 32px);
+}
+
+/* Buttons — one primary language across the app. */
+.rcx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  font-family: var(--rcx-sans);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: filter 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.rcx-btn-primary {
+  background: var(--rcx-cyan);
+  color: #06222b;
+}
+.rcx-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.rcx-btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.rcx-btn-ghost {
+  background: transparent;
+  border-color: var(--rcx-line);
+  color: var(--rcx-ice);
+  font-weight: 700;
+}
+.rcx-btn-ghost:hover:not(:disabled) {
+  border-color: var(--rcx-cyan);
+}
+
+.rcx-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Fields */
+.rcx-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.rcx-hint {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--rcx-muted);
+  margin: 0 0 10px;
+}
+
+.rcx-input,
+.rcx-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(11, 18, 32, 0.6);
+  border: 1px solid rgba(244, 254, 255, 0.16);
+  border-radius: 12px;
+  color: var(--rcx-ice);
+  font-family: var(--rcx-sans);
+  font-size: 15px;
+  padding: 13px 15px;
+  line-height: 1.55;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rcx-input::placeholder,
+.rcx-textarea::placeholder {
+  color: var(--rcx-faint);
+}
+
+.rcx-input:focus,
+.rcx-textarea:focus {
+  outline: none;
+  border-color: var(--rcx-cyan);
+  box-shadow: 0 0 0 3px rgba(53, 224, 255, 0.16);
+}
+
+.rcx-field-error {
+  color: var(--rcx-danger);
+  font-size: 13.5px;
+  margin: 8px 0 0;
+  line-height: 1.5;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Alert notes — plain-language honesty blocks. */
+.rcx-note {
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  border: 1px solid var(--rcx-line);
+  background: rgba(244, 254, 255, 0.03);
+  color: var(--rcx-muted);
+}
+
+.rcx-note-error {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.07);
+  color: #fecaca;
+}
+
+.rcx-note-warn {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.07);
+  color: #fde68a;
+}
+
+.rcx-note-info {
+  border-color: rgba(53, 224, 255, 0.35);
+  background: rgba(53, 224, 255, 0.06);
+  color: var(--rcx-ice);
+}
+
+/* Status pills — one shared language across dashboard + detail. */
+.rcx-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 5px 13px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.rcx-pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  flex: 0 0 7px;
+}
+
+.rcx-pill-open {
+  background: var(--rcx-cyan);
+  color: #06222b;
+}
+.rcx-pill-attested {
+  background: transparent;
+  color: var(--rcx-cyan);
+  border-color: rgba(53, 224, 255, 0.55);
+}
+.rcx-pill-flagged {
+  background: var(--rcx-paper);
+  color: var(--rcx-ink);
+}
+.rcx-pill-captured {
+  background: transparent;
+  color: var(--rcx-muted);
+  border-color: var(--rcx-line);
+}
+.rcx-pill-voided {
+  background: transparent;
+  color: var(--rcx-faint);
+  border-color: transparent;
+}
+.rcx-pill-unknown {
+  background: transparent;
+  color: var(--rcx-muted);
+  border-color: var(--rcx-line);
+}
+
+/* Skeleton regions — never blank space, never invented rows. */
+.rcx-skel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(244, 254, 255, 0.07);
+}
+.rcx-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(244, 254, 255, 0.11),
+    transparent
+  );
+  background-size: 400px 100%;
+  animation: rcx-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes rcx-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+/* Entrance — opacity + translateY only, ≤0.8s, staggerable. */
+@media (prefers-reduced-motion: no-preference) {
+  .rcx-rise {
+    opacity: 0;
+    animation: rcx-rise 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    animation-delay: var(--rcx-i, 0ms);
+  }
+}
+@keyframes rcx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Empty state — one formula: motif + one line + one CTA. */
+.rcx-empty {
+  border: 1px dashed rgba(244, 254, 255, 0.22);
+  border-radius: 20px;
+  padding: clamp(48px, 7vw, 80px) 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rcx-empty-icon {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 20px;
+  color: var(--rcx-cyan);
+}
+
+.rcx-empty-line {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.rcx-empty-sub {
+  font-size: 14px;
+  color: var(--rcx-muted);
+  margin: 0 0 24px;
+  max-width: 44ch;
+  line-height: 1.6;
+}
+
+/* Warm-paper trust band — RAINCHECK's honest signature surface. */
+.rcx-paperband {
+  background: var(--rcx-paper);
+  color: var(--rcx-ink);
+  border-radius: 18px;
+  padding: clamp(22px, 3vw, 32px);
+}
+.rcx-paperband .rcx-eyebrow {
+  color: rgba(11, 18, 32, 0.55);
+}
+.rcx-paperband h2,
+.rcx-paperband h3 {
+  color: var(--rcx-ink);
+}
+
+.rcx-mono {
+  font-family: var(--rcx-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rcx-skel::after {
+    animation: none;
+    background: rgba(244, 254, 255, 0.08);
+  }
+}
+
+@media (max-width: 560px) {
+  .rcx-appbar-cta span {
+    display: none;
+  }
+  .rcx-appbar-cta {
+    padding: 10px 14px;
+  }
+}
