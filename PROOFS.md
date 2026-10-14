@@ -9,14 +9,57 @@
 | V1 USDC (production) | `0x97f233865ae84DC7475F6D7CA404930654580CB5` | [`0xebd2e3fbbf805ba36fe0c1173f655b10aa769fd6809ccdfec5e61cef5213aa51`](https://explorer.arc.io/tx/0xebd2e3fbbf805ba36fe0c1173f655b10aa769fd6809ccdfec5e61cef5213aa51) | 25956323 | [`exact_match`](https://sourcify.dev/server/v2/contract/5042/0x97f233865ae84DC7475F6D7CA404930654580CB5) |
 | V1 EURC (production) | `0x3ceba2fbeb27162bfc4888f6b61e48bd359c1e0a` | [`0x34f7240f5c074fa082ad4e6b672d0fbd2542792459e5f09d51ee2ebc586a4094`](https://explorer.arc.io/tx/0x34f7240f5c074fa082ad4e6b672d0fbd2542792459e5f09d51ee2ebc586a4094) | 25962288 | [`exact_match`](https://sourcify.dev/server/v2/contract/5042/0x3ceba2fbeb27162bfc4888f6b61e48bd359c1e0a) |
 | V2 (experimental) | `0x3795b865f7fc84a14ab60456be9fc6dd0cb56f0c` | [`0x046f1744296e87e006ce1a48318cad992ac3d4cd3a22b5302db26f0b3d7cdcae`](https://explorer.arc.io/tx/0x046f1744296e87e006ce1a48318cad992ac3d4cd3a22b5302db26f0b3d7cdcae) | 25962342 | [`exact_match`](https://sourcify.dev/server/v2/contract/5042/0x3795b865f7fc84a14ab60456be9fc6dd0cb56f0c) |
+| OracleRegistry (T0-O ECDSA_PINNED) | `0x61412688aAF14F8A0e94C6665933E5DFA84e405A` | [`0x1879d4fd35ebbbc71c933cb6d13626ca60783335c520e44bcfb6a54e6a45d67d`](https://explorer.arc.io/tx/0x1879d4fd35ebbbc71c933cb6d13626ca60783335c520e44bcfb6a54e6a45d67d) | 25995772 | [`exact_match`](https://sourcify.dev/server/v2/contract/5042/0x61412688aAF14F8A0e94C6665933E5DFA84e405A) |
+| RaincheckEscrowFP (V1.1 freeze-proof, USDC) | `0x54F05A5214d99cA458d142bA9E2f0CB77c1B2470` | [`0x80295e4b498a9c46348bc4b55741a429e65bfb921d11b6517428a9ae50d0eb7c`](https://explorer.arc.io/tx/0x80295e4b498a9c46348bc4b55741a429e65bfb921d11b6517428a9ae50d0eb7c) | 25995933 | [`exact_match`](https://sourcify.dev/server/v2/contract/5042/0x54F05A5214d99cA458d142bA9E2f0CB77c1B2470) |
+| RaincheckEscrowFP (V1.1 freeze-proof, test-token) | `0x10F2F2f10Fd9F6820BC83dE48EF0D6720A173F29` | [`0x1bbb6dc9cc226b023a9f64e2137688ac8e890e01ac836ad30e4cc199251db4b3`](https://explorer.arc.io/tx/0x1bbb6dc9cc226b023a9f64e2137688ac8e890e01ac836ad30e4cc199251db4b3) | 25995942 | [`exact_match`](https://sourcify.dev/server/v2/contract/5042/0x10F2F2f10Fd9F6820BC83dE48EF0D6720A173F29) |
 
-On-chain checks passed (all three): `challengeWindow()` = 300 (0x12c); constructor token matches the token listed for the instance; non-empty runtime code (7270 / 7270 / 8196 bytes); deploy tx status 1.
+On-chain checks passed (all six): `challengeWindow()` = 300 (0x12c) on all four escrow instances; constructor token matches the token listed for the instance; non-empty runtime code (7270 / 7270 / 8196 / 7658 / 7658 bytes; OracleRegistry 10359); OracleRegistry `owner()` = deployer, `ROTATION_TIMELOCK()` = 259200; deploy txs status 1. Test-only instrument: PausableTestToken `0x5A1166eC096e12C0C6187695F82B7F4b285389Df` ([deploy tx](https://explorer.arc.io/tx/0xf20a03534c75413a66e708030d20a8574811be99aee5d01ecb3896cf2049945c), Sourcify exact_match) — no economic value, exists only to prove the FP freeze path.
 
 Reference tokens: USDC `0x3600000000000000000000000000000000000000`; EURC `0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1` (correct EIP-55 checksum — the founder's stated form had a bad checksum on identical 20 bytes); Memo `0x5294E9927c3306DcBaDb03fe70b92e01cCede505` (existing infra, reused for receipt anchoring).
 
 ## 2. Foundry tests
 
-**38/38 pass** (`contracts/test/`): 14 lifecycle + 13 edge/fuzz + 11 V2-delta. No separate coverage artifact recorded — the 38 tests include the state-machine and delta assertions; coverage was not published.
+**60/60 pass** (`contracts/test/`): 14 lifecycle + 13 edge/fuzz + 11 V2-delta + 13 oracle (T0-O ECDSA_PINNED: happy path, wrong-key, revoked-issuer, 3-day rotation timelock, OIDC "not live", registration guards) + 9 freeze-proof (frozen capture/void/voidAfterDeadline → PaymentHeld + owed[]; withdraw after unpause; re-hold while frozen; happy path unchanged). No separate coverage artifact recorded.
+
+### 2.1 T0-O oracle proofs (OracleRegistry `0x61412688aAF14F8A0e94C6665933E5DFA84e405A`)
+
+Attestation store only — never holds funds. Digest: `keccak256("raincheck:5042:oracle:" ‖ paymentId ‖ outputHash)` signed RAW (no EIP-191 prefix).
+
+| Tx | Action | What it proves |
+|---|---|---|
+| [`0x5bb3679dbfa7eb3bd493ddb10a7ae34adf952a3da297796affe63896297868ec`](https://explorer.arc.io/tx/0x5bb3679dbfa7eb3bd493ddb10a7ae34adf952a3da297796affe63896297868ec) | registerIssuer(ECDSA_PINNED, throwaway key `0x4003640Ba9D36593E054Ff395d72E707db72d39f`) | owner pins an ECDSA oracle key; `IssuerRegistered` emitted |
+| [`0xee30d2ab4a9c12c0be462b2d0ca0e8d57af2775149825fd9a7577cdbb4339b2d`](https://explorer.arc.io/tx/0xee30d2ab4a9c12c0be462b2d0ca0e8d57af2775149825fd9a7577cdbb4339b2d) | attestWithOracle with a REAL signature from the pinned key | ecrecover matches pinned key; attestation stored on-chain: `attestations(0xef68…eb90)` = issuer `0x3e05…f501`, outputHash `0x1234…45aa`, attestedAt 1792018279; `OracleAttested` emitted |
+| [`0xc486f85cd3f1d319545b854b042b1f09169787986d56ecdf8a57be6e9d5fd54d`](https://explorer.arc.io/tx/0xc486f85cd3f1d319545b854b042b1f09169787986d56ecdf8a57be6e9d5fd54d) | revokeKey | immediate revocation; on-chain `issuers(0x3e05…f501)` = kind 2 (ECDSA_PINNED), oracleKey 0x0, revoked true |
+
+issuerId = `keccak256("ecdsa:raincheck-win-oracle")` = `0x3e050d60215ad9b943c99e7ff0fd99e1aeb8e57694be334fd44117c3564ef501`.
+
+### 2.2 Freeze-proof proofs (RaincheckEscrowFP V1.1)
+
+V1.1 = V1 with exactly two deltas: all payouts route through `_sendOrHold` (failed transfer → `owed[]` credit + `PaymentHeld`, never reverts the state transition) and a permissionless `withdraw()` with re-hold. State machine, 300s window, events otherwise identical to V1.
+
+**Happy path — FP-USDC `0x54F05A5214d99cA458d142bA9E2f0CB77c1B2470`** (proves V1.1 does not change the unfrozen path):
+
+| Tx | Action | What it proves |
+|---|---|---|
+| [`0x7190a92549ae7e1b2220278b06cadecd9b66a29af20cf26cc43fff9ddc92e618`](https://explorer.arc.io/tx/0x7190a92549ae7e1b2220278b06cadecd9b66a29af20cf26cc43fff9ddc92e618) | approve 0.01 USDC | allowance for the FP instance |
+| [`0x30ae5eabe53f3a2204295a060499db4fc557f30258630d8f03d94d9b9c2368cd`](https://explorer.arc.io/tx/0x30ae5eabe53f3a2204295a060499db4fc557f30258630d8f03d94d9b9c2368cd) | happy authorize 0.01 USDC | receipt → OPEN; FP pulls principal via transferFrom |
+| [`0xcb86c33cac2d534e395e7194e86aa64b4bc1cfd3ea78ee81b643fd6a400320b4`](https://explorer.arc.io/tx/0xcb86c33cac2d534e395e7194e86aa64b4bc1cfd3ea78ee81b643fd6a400320b4) | happy attest | receipt → ATTESTED |
+| [`0xcfcbf20368e1e9ae2ea66363c57e3c4476a87be73a241f18897ad73d67735cd5`](https://explorer.arc.io/tx/0xcfcbf20368e1e9ae2ea66363c57e3c4476a87be73a241f18897ad73d67735cd5) | happy capture (post-300s window) | Transfer event = exactly 0.01 USDC (10000 base units) FP → seller; `owed(seller)` = 0 — direct payout, happy path byte-behavior unchanged from V1 |
+
+**Freeze path — FP-testtoken `0x10F2F2f10Fd9F6820BC83dE48EF0D6720A173F29` + PausableTestToken `0x5A1166eC096e12C0C6187695F82B7F4b285389Df`:**
+
+| Tx | Action | What it proves |
+|---|---|---|
+| [`0x4096f79b40bf23990a1e1911ef08f020f9a2fe8e2cc18e347300caf2ddc1bc02`](https://explorer.arc.io/tx/0x4096f79b40bf23990a1e1911ef08f020f9a2fe8e2cc18e347300caf2ddc1bc02) | approve 0.01 PTT | allowance for the FP instance |
+| [`0x82f5ce00f2a5e1222eb42f21d839f682103b6377e63d86531fe252b105786190`](https://explorer.arc.io/tx/0x82f5ce00f2a5e1222eb42f21d839f682103b6377e63d86531fe252b105786190) | authorize 0.01 PTT | receipt → OPEN |
+| [`0x4054fa45b3f2a344de1bc026c363a2d55654203d827af590ea52bdb618107790`](https://explorer.arc.io/tx/0x4054fa45b3f2a344de1bc026c363a2d55654203d827af590ea52bdb618107790) | attestDelivery | receipt → ATTESTED |
+| [`0x3819a599ddf0ae46c36df8cf9b83a900c3c11797ea37aab48dfe89f68732229a`](https://explorer.arc.io/tx/0x3819a599ddf0ae46c36df8cf9b83a900c3c11797ea37aab48dfe89f68732229a) | flagNonDelivery | receipt → FLAGGED |
+| [`0x3eeaa4ed23da7f27aff7d8044e42b5f6a0d19aabd456c9432afa6bb99d1c8f63`](https://explorer.arc.io/tx/0x3eeaa4ed23da7f27aff7d8044e42b5f6a0d19aabd456c9432afa6bb99d1c8f63) | pause token | freeze induced (simulates a frozen/blacklisted token) |
+| [`0xe9b65a42f7cc8cd58f75c6c72fc016c3eeedf38a956eeb95b29aebb7495ce2ab`](https://explorer.arc.io/tx/0xe9b65a42f7cc8cd58f75c6c72fc016c3eeedf38a956eeb95b29aebb7495ce2ab) | **void while frozen** | **status 1 — does NOT revert**; `PaymentHeld(pid, buyer, 10000)` + `RaincheckVoided` emitted; `owed(buyer)` = 10000 verified on-chain (on V1 this bricks the receipt) |
+| [`0xa49b888f26ae20ea3127c2deb2ce466ac99a5d8521788bc5d19ea0c7c0387cc6`](https://explorer.arc.io/tx/0xa49b888f26ae20ea3127c2deb2ce466ac99a5d8521788bc5d19ea0c7c0387cc6) | unpause token | freeze lifted |
+| [`0xda6748623e86753daccdbf1315ad01f76d7a260acc6f45167598bed68232a72c`](https://explorer.arc.io/tx/0xda6748623e86753daccdbf1315ad01f76d7a260acc6f45167598bed68232a72c) | withdraw() (permissionless) | `owed(buyer)` 10000 → 0; buyer PTT balance 999999990000 → 1000000000000 (+10000) — **full recovery, nothing trapped** |
+
+**Honest caveat:** the freeze path was executed on mainnet against a pausable TEST token (`0x5A1166eC096e12C0C6187695F82B7F4b285389Df`, no economic value); a real-USDC freeze cannot be induced on mainnet without Circle blacklisting an address. The failure mode exercised (token `transfer` reverts) is exactly what a frozen-USDC payout does at the EVM level — the contract cannot distinguish them.
 
 ## 3. Dust transactions (Arc mainnet, dust amounts only)
 
@@ -81,10 +124,13 @@ EURC suite net principal ≈ 0 (deployer is buyer+sellers; all dust refunded/voi
 - V2 deltas execute on mainnet: 7-param authorize with `policyRef` stored, `disputes=1` on void, `voidAfterDeadline` recovery.
 - LI.FI USDC→EURC swaps route live on Arc 5042 (Kyberswap executor).
 - Memo receipt anchoring (`BeforeMemo` → inner → `Memo`, `callDataHash` bound per transition).
-- Sourcify `exact_match` (creation + runtime) on all three instances, chain 5042.
+- Sourcify `exact_match` (creation + runtime) on all six instances, chain 5042.
+- **T0-O ECDSA_PINNED oracle tier is LIVE** (OracleRegistry `0x61412688aAF14F8A0e94C6665933E5DFA84e405A`, Sourcify exact_match): issuer registered on-chain, real pinned-key signature attested on-chain (tx `0xee30d2ab…4339b2d`), issuer revoked on-chain (tx `0xc486f85c…5fd54d`). 13/13 forge tests green (happy path, wrong-key revert, revoked-issuer revert, 3-day rotation timelock, OIDC "not live" revert, registration guards). Attestation store only — never holds funds; escrow wire-up (ORACLE_ONLY/ORACLE_PREFERRED capture gates) still specified-not-live.
+- **V1.1 freeze-proof escrow is LIVE** (RaincheckEscrowFP, Sourcify exact_match on both instances): happy path on real USDC unchanged (0.01 USDC capture → seller, `owed`=0); freeze path proven on mainnet — token paused → `void` status 1 (no revert), `PaymentHeld` emitted, `owed(buyer)`=10000, unpause → permissionless `withdraw()` → full +10000 recovery. Honest caveat: the freeze was induced on a pausable TEST token (real-USDC freeze needs Circle blacklisting); the exercised failure mode (transfer revert) is EVM-identical. 9/9 forge tests green (frozen capture/void/voidAfterDeadline hold; re-hold while frozen; happy path unchanged).
 
 **SPECIFIED — NOT YET LIVE:**
-- **T0-O oracle tier:** fully specified (bible §4.5) — never deployed, no mainnet txs.
+- **T0-O OIDC_RS256 tier:** registration is allowed on OracleRegistry (kind recorded honestly) but every verification path reverts "OIDC not live" — RS256 verification never deployed, no mainnet txs.
+- **Oracle→escrow wire-up:** `OraclePolicy` modes (ORACLE_ONLY/ORACLE_PREFERRED) and `attestWithOracle` capture gates are bible §4.5 spec — no escrow contract consumes oracle attestations yet.
 - **V2 in the production app:** contract proven on mainnet but experimental — unwired in the UI, not audited, explicitly "do NOT integrate."
 - **In-app CCTP execution:** guide only — contract-initiated CCTP burns are chain-gated on Arc (proven with minimal test contracts); direct EOA burns work.
 - **Circle Onramp Kit:** mentioned as a fiat fallback only — no integration executed.
