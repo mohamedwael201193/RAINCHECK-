@@ -1,0 +1,144 @@
+/* ReceiptPrintSheet — print/PDF stylesheet.
+ *
+ * Screen: the sheet is display:none (it lives in a portal on document.body,
+ * aria-hidden, and must never show in the app).
+ *
+ * Print: hide EVERYTHING except the sheet, then render it as a clean
+ * black-on-white paper record. Full URLs are shown as text because paper
+ * can't click. No app chrome, no colors that waste ink.
+ */
+
+.rc-print-sheet {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  /* Hide the entire app (and any other body-level UI like toasts) — only
+     the print sheet survives. */
+  body > *:not(.rc-print-sheet) {
+    display: none !important;
+  }
+
+  .rc-print-sheet {
+    display: block !important;
+    color: #000;
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+      Arial, system-ui;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    max-width: 100%;
+  }
+
+  .rc-print-sheet a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .rcp-head {
+    border-bottom: 2px solid #000;
+    padding-bottom: 8pt;
+    margin-bottom: 12pt;
+  }
+
+  .rcp-brand {
+    margin: 0 0 4pt;
+    font-size: 9pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #333;
+  }
+
+  .rcp-head h1 {
+    margin: 0 0 4pt;
+    font-size: 17pt;
+    font-weight: 700;
+  }
+
+  .rcp-sub {
+    margin: 0;
+    font-size: 8.5pt;
+    color: #333;
+  }
+
+  .rcp-section {
+    margin: 12pt 0;
+    break-inside: avoid-page;
+  }
+
+  .rcp-section h2 {
+    margin: 0 0 6pt;
+    font-size: 12pt;
+    font-weight: 700;
+    border-bottom: 1px solid #999;
+    padding-bottom: 3pt;
+  }
+
+  .rcp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+
+  .rcp-table th,
+  .rcp-table td {
+    border: 1px solid #bbb;
+    padding: 4pt 6pt;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .rcp-table th[scope="row"] {
+    width: 30%;
+    font-weight: 600;
+    background: #f4f4f4;
+  }
+
+  .rcp-timeline thead th {
+    background: #f4f4f4;
+    font-weight: 700;
+  }
+
+  .rcp-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 8.5pt;
+    word-break: break-all;
+  }
+
+  .rcp-dim {
+    color: #444;
+    font-size: 8pt;
+  }
+
+  .rcp-url {
+    word-break: break-all;
+  }
+
+  .rcp-pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 8.5pt;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border: 1px solid #bbb;
+    padding: 6pt;
+    margin: 0;
+    background: #fafafa;
+  }
+
+  .rcp-note {
+    font-style: italic;
+    color: #333;
+  }
+
+  .rcp-foot {
+    margin-top: 14pt;
+    border-top: 1px solid #999;
+    padding-top: 6pt;
+    font-size: 8.5pt;
+    color: #333;
+  }
+}

@@ -67,9 +67,28 @@ export const ESCROW_ADDRESS = (envVar("VITE_ESCROW_ADDRESS")?.trim() ||
 // RaincheckEscrow — PRODUCTION V1 EURC instance, Sourcify exact_match on 5042.
 // (contracts/deployments/arc-5042.json -> eurcEscrow; block 25962288,
 // challengeWindow 300). SAME V1 source — constructor arg changed to EURC only.
-// Multi-asset = one escrow instance per token; V2 experimental is NOT wired.
+// Multi-asset = one escrow instance per token; V2 experimental is USDC-only.
 export const ESCROW_ADDRESS_EURC = (envVar("VITE_ESCROW_ADDRESS_EURC")?.trim() ||
   "0x3ceba2fbeb27162bfc4888f6b61e48bd359c1e0a") as `0x${string}`;
+
+// RaincheckEscrowV2 — EXPERIMENTAL, Sourcify exact_match on 5042
+// (contracts/deployments/arc-5042.json -> v2Experimental; deploy tx
+// 0x046f1744296e87e006ce1a48318cad992ac3d4cd3a22b5302db26f0b3d7cdcae,
+// block 25962342, challengeWindow 300). Deltas vs V1: 7-param authorize
+// (policyRef, fundingRef), disputes(seller) counter (incremented on void()
+// ONLY — never on voidAfterDeadline), getPayment() policy-consumer view.
+// USDC-only instance. NOT audited: the app exposes it as an opt-in with an
+// "Experimental — unaudited" badge, never as the default.
+export const V2_ESCROW_ADDRESS = (envVar("VITE_V2_ESCROW_ADDRESS")?.trim() ||
+  "0x3795b865f7fc84a14ab60456be9fc6dd0cb56f0c") as `0x${string}`;
+
+/** V2 deploy block — the floor for chain-direct V2 event scans. */
+export const V2_DEPLOY_BLOCK = 25962342n;
+
+/** True when the address is the experimental V2 instance. */
+export function isV2Escrow(addr: string | null | undefined): boolean {
+  return !!addr && addr.toLowerCase() === V2_ESCROW_ADDRESS.toLowerCase();
+}
 
 // Arc EURC — ERC-20 face (6 decimals), the EURC escrow's token.
 export const EURC_ADDRESS =
@@ -96,7 +115,8 @@ export const PAYMENT_TOKENS: Record<PaymentTokenSymbol, PaymentTokenConfig> = {
   EURC: { symbol: "EURC", escrow: ESCROW_ADDRESS_EURC, token: EURC_ADDRESS, decimals: 6 },
 };
 
-/** Derive the payment-token symbol from an escrow address (null = unknown). */
+/** Derive the payment-token symbol from an escrow address (null = unknown).
+ *  V2 is USDC-only, so its address maps to USDC. */
 export function tokenSymbolForEscrow(
   escrow: string | null | undefined,
 ): PaymentTokenSymbol | null {
@@ -105,6 +125,7 @@ export function tokenSymbolForEscrow(
   for (const cfg of Object.values(PAYMENT_TOKENS)) {
     if (cfg.escrow.toLowerCase() === lower) return cfg.symbol;
   }
+  if (lower === V2_ESCROW_ADDRESS.toLowerCase()) return "USDC";
   return null;
 }
 
@@ -313,6 +334,146 @@ export async function readChainNow(): Promise<bigint> {
 }
 
 // ---------------------------------------------------------------------------
+// V2 reads (RaincheckEscrowV2 — experimental, Sourcify exact_match)
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal V2 ABI for reads. The receipts() mapping gains policyRef and
+ * fundingRef before the status uint8 vs V1 — a V2 receipt must NEVER be
+ * decoded with the V1 layout (the status ordinal would be misread).
+ * Status ordinals are byte-identical to V1 (NONE, OPEN, ATTESTED, CAPTURED,
+ * VOIDED, FLAGGED) — verified in both sources — so STATUS_BY_ORDINAL is
+ * shared; the 11-field tuple is what differs.
+ */
+const V2_ABI = [
+  {
+    name: "receipts",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "paymentId", type: "bytes32" }],
+    outputs: [
+      { name: "termsHash", type: "bytes32" },
+      { name: "buyer", type: "address" },
+      { name: "seller", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "deadline", type: "uint256" },
+      { name: "outputHash", type: "bytes32" },
+      { name: "attestedAt", type: "uint256" },
+      { name: "flagReasonHash", type: "bytes32" },
+      { name: "policyRef", type: "bytes32" },
+      { name: "fundingRef", type: "bytes32" },
+      { name: "status", type: "uint8" },
+    ],
+  },
+  {
+    name: "challengeWindow",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "disputes",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "seller", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "getPayment",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "paymentId", type: "bytes32" }],
+    outputs: [
+      { name: "status", type: "uint8" },
+      { name: "seller", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "termsHash", type: "bytes32" },
+    ],
+  },
+] as const satisfies Abi;
+
+export interface V2ReceiptView extends ChainReceiptView {
+  policyRef: `0x${string}`;
+  fundingRef: `0x${string}`;
+}
+
+/** Read the full V2 receipt struct + challengeWindow straight from chain. */
+export async function readV2ReceiptFromChain(
+  paymentId: `0x${string}`,
+): Promise<V2ReceiptView> {
+  const [r, challengeWindow] = await Promise.all([
+    publicClient.readContract({
+      address: V2_ESCROW_ADDRESS,
+      abi: V2_ABI,
+      functionName: "receipts",
+      args: [paymentId],
+    }),
+    publicClient.readContract({
+      address: V2_ESCROW_ADDRESS,
+      abi: V2_ABI,
+      functionName: "challengeWindow",
+    }),
+  ]);
+  const [
+    termsHash,
+    buyer,
+    seller,
+    amount,
+    deadline,
+    outputHash,
+    attestedAt,
+    flagReasonHash,
+    policyRef,
+    fundingRef,
+    status,
+  ] = r as readonly [
+    `0x${string}`,
+    `0x${string}`,
+    `0x${string}`,
+    bigint,
+    bigint,
+    `0x${string}`,
+    bigint,
+    `0x${string}`,
+    `0x${string}`,
+    `0x${string}`,
+    number,
+  ];
+  const ordinal = Number(status);
+  return {
+    termsHash,
+    buyer,
+    seller,
+    amount,
+    deadline,
+    outputHash,
+    attestedAt,
+    flagReasonHash,
+    policyRef,
+    fundingRef,
+    statusOrdinal: ordinal,
+    statusName: STATUS_BY_ORDINAL[ordinal] ?? "UNKNOWN",
+    challengeWindow: challengeWindow as bigint,
+  };
+}
+
+/**
+ * V2 dispute counter for a seller — incremented on void() ONLY, never on
+ * voidAfterDeadline (liveness ≠ dishonesty). Returns 0 for sellers with no
+ * disputed refunds.
+ */
+export async function readV2Disputes(seller: `0x${string}`): Promise<bigint> {
+  const n = await publicClient.readContract({
+    address: V2_ESCROW_ADDRESS,
+    abi: V2_ABI,
+    functionName: "disputes",
+    args: [seller],
+  });
+  return n as bigint;
+}
+
+// ---------------------------------------------------------------------------
 // Action tx builders (Memo-wrapped, manual gas limits — bible §9.1)
 // ---------------------------------------------------------------------------
 
@@ -352,6 +513,13 @@ export interface ActionTxPreview {
   chainId: number;
   /** Decoded inner call for the preview panel. */
   inner: { target: `0x${string}`; function: string; args: string[] };
+  /**
+   * The inner escrow calldata UNWRAPPED (same bytes the Memo contract
+   * forwards on-chain). Used for the eth_call pre-send simulation —
+   * the Memo contract reverts under eth_call, so only the inner step is
+   * previewable (see lib/simulate.ts).
+   */
+  innerData: `0x${string}`;
   memoId: `0x${string}`;
 }
 
@@ -450,6 +618,7 @@ export function buildActionTx(
     gasHex: toHex(gas),
     chainId: CHAIN_ID,
     inner: { target: escrow, function: innerFn, args: innerArgs },
+    innerData,
     memoId,
   };
 }

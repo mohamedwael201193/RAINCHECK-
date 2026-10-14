@@ -32,16 +32,19 @@ import {
   publicClient,
   shortHex,
   PAYMENT_TOKENS,
+  V2_ESCROW_ADDRESS,
   type PaymentTokenSymbol,
 } from "../../lib/chain";
 import {
   buildApprove,
   buildAuthorize,
+  buildAuthorizeV2,
   signTerms,
   usdcToBase,
   baseToUsdc,
   explorerTxUrl,
   GAS_LIMITS,
+  USDC_ADDRESS,
 } from "../../lib/tx";
 import {
   derivePaymentId,
@@ -51,6 +54,7 @@ import {
   waitForMinedStatus1,
   readBuyerBalances,
 } from "./newReceiptFlow";
+import { builtTxToSimulationTarget, simulate } from "../../lib/simulate";
 import TokenIcon from "../../components/TokenIcon";
 import GetEurcPanel from "../../components/GetEurcPanel";
 import AppShell from "../../components/dashboard/AppShell";
@@ -182,6 +186,21 @@ export default function NewReceiptPage() {
   const [tokenSymbol, setTokenSymbol] = useState<PaymentTokenSymbol>("USDC");
   const tokenCfg = PAYMENT_TOKENS[tokenSymbol];
 
+  // Protocol tier: V1 (production, default) or V2 (experimental, USDC-only,
+  // 7-param authorize with policyRef). V2 is unaudited — opt-in only.
+  const [protocol, setProtocol] = useState<"V1" | "V2">("V1");
+  const isV2 = protocol === "V2";
+  const [policyRef, setPolicyRef] = useState("");
+
+  const selectProtocol = (p: "V1" | "V2") => {
+    setProtocol(p);
+    if (p === "V2") setTokenSymbol("USDC"); // V2 settles USDC only
+  };
+
+  const v2Escrow = V2_ESCROW_ADDRESS as Address;
+  const policyRefValid =
+    policyRef.trim() === "" || /^0x[0-9a-fA-F]{64}$/.test(policyRef.trim());
+
   const [buyer, setBuyer] = useState<Address | null>(null);
   const [connecting, setConnecting] = useState(false);
 
@@ -298,6 +317,7 @@ export default function NewReceiptPage() {
   const [steps, setSteps] = useState<Step[]>(() => freshSteps("—", tokenSymbol));
   const [running, setRunning] = useState(false);
   const [fatal, setFatal] = useState<string | null>(null);
+  const [fatalTechnical, setFatalTechnical] = useState<string | null>(null);
   const [openedPaymentId, setOpenedPaymentId] = useState<Hex | null>(null);
 
   const setPhase = (n: 1 | 2 | 3, phase: Phase, txHash?: Hex) =>
@@ -329,13 +349,16 @@ export default function NewReceiptPage() {
     const deadline = BigInt(Math.floor(new Date(values.deadline).getTime() / 1000));
     setRunning(true);
     setFatal(null);
+    setFatalTechnical(null);
     setOpenedPaymentId(null);
     setSteps(freshSteps(baseToUsdc(amount), tokenSymbol));
 
     try {
       // 1 — Sign the terms (free, off-chain). termsHash = sha256(canonical
       // terms JSON) per F8's signTerms; the signature binds it to the buyer.
-      // The EIP-712 domain names the SELECTED escrow instance (multi-asset).
+      // The EIP-712 domain names the SELECTED escrow instance (multi-asset;
+      // V2 names the experimental escrow).
+      const escrowForFlow = isV2 ? v2Escrow : tokenCfg.escrow;
       const { typedData, termsHash } = signTerms(
         {
           buyer,
@@ -344,17 +367,17 @@ export default function NewReceiptPage() {
           price: amount,
           deadline,
         },
-        tokenCfg.escrow,
+        escrowForFlow,
       );
       setPhase(1, "signing");
       await signTermsWithInjected(buyer, typedData);
       setPhase(1, "done");
 
       // 2 — Approve the escrow pull (Memo-wrapped, manual gas): the selected
-      // payment token, spender = the selected escrow instance.
+      // payment token, spender = the selected escrow instance (V2: USDC, V2 escrow).
       const approveTx = buildApprove(amount, {
-        token: tokenCfg.token,
-        escrow: tokenCfg.escrow,
+        token: isV2 ? USDC_ADDRESS : tokenCfg.token,
+        escrow: escrowForFlow,
       });
       setPhase(2, "signing");
       const approveHash = await sendTxShim(approveTx, buyer);
@@ -374,15 +397,45 @@ export default function NewReceiptPage() {
         salt,
       });
       setOpenedPaymentId(paymentId);
-      const authTx = buildAuthorize(
-        paymentId,
-        termsHash,
-        seller,
-        amount,
-        deadline,
-        tokenCfg.escrow,
-      );
+      // V2 uses the 7-param authorize (policyRef, fundingRef) from
+      // contracts/src/RaincheckEscrowV2.sol — empty policyRef = zeroed refs,
+      // standalone behavior identical to V1.
+      const authTx = isV2
+        ? buildAuthorizeV2(
+            paymentId,
+            termsHash,
+            seller,
+            amount,
+            deadline,
+            policyRef.trim() || undefined,
+            undefined,
+            escrowForFlow,
+          )
+        : buildAuthorize(
+            paymentId,
+            termsHash,
+            seller,
+            amount,
+            deadline,
+            escrowForFlow,
+          );
       setPhase(3, "signing");
+      // Pre-send check: eth_call the UNWRAPPED escrow step (the memo wrapper
+      // reverts under eth_call — lib/simulate.ts). A revert blocks signing so
+      // the buyer never burns gas on a doomed authorize.
+      const sim = await simulate(builtTxToSimulationTarget(authTx), {
+        from: buyer,
+      });
+      if (!sim.ok && sim.kind === "revert") {
+        setPhase(3, "error");
+        setFatal(sim.userMessage);
+        setFatalTechnical(sim.technical);
+        toast.error("Pre-send check failed — not signing.", {
+          description: sim.userMessage,
+        });
+        setRunning(false);
+        return;
+      }
       const authHash = await sendTxShim(authTx, buyer);
       setPhase(3, "pending", authHash);
       await waitForMinedStatus1(authHash);
@@ -390,7 +443,7 @@ export default function NewReceiptPage() {
 
       // Success ONLY on the mined status-1 receipt above — never earlier.
       toast.success("Receipt opened — redirecting…");
-      navigate(`/dashboard/r/${paymentId}`);
+      navigate(`/dashboard/r/${paymentId}${isV2 ? "?protocol=v2" : ""}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Something went wrong.";
       setFatal(msg);
@@ -406,6 +459,8 @@ export default function NewReceiptPage() {
   const submitDisabled =
     running ||
     !isValid ||
+    // V2: policyRef must be a valid bytes32 or empty (zeroed).
+    (isV2 && !policyRefValid) ||
     // The balance gate must have answered before the button enables:
     // a fast click before the check completes must never bypass it.
     (buyer !== null && amountUnits !== null && (!gate.known || !gate.ok));
@@ -475,15 +530,98 @@ export default function NewReceiptPage() {
           </div>
         </section>
 
-        {/* payment token selector — one escrow instance per token */}
-        <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "110ms" }} aria-label="Payment token">
+        {/* protocol version — V1 production (default) or V2 experimental */}
+        <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "95ms" }} aria-label="Protocol version">
           <div className="rc-new-card-head">
             <span className="rc-new-num" aria-hidden="true">01</span>
             <div>
-              <h2>Payment token</h2>
-              <p>Each token has its own audited escrow instance. Pick the one the deal is priced in.</p>
+              <h2>Protocol version</h2>
+              <p>V1 is the audited production escrow. V2 is experimental and unaudited — opt in only if you know what it changes.</p>
             </div>
           </div>
+          <div className="rc-token-opts" role="radiogroup" aria-label="Protocol version">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={protocol === "V1"}
+              onClick={() => selectProtocol("V1")}
+              className={`rc-token-opt${protocol === "V1" ? " is-selected" : ""}`}
+            >
+              <span className="rc-token-opt-body">
+                <span className="rc-token-opt-name">V1 · Production</span>
+                <span className="rc-token-opt-sub">
+                  The escrow this app runs on. USDC + EURC. Sourcify exact_match.
+                </span>
+                <code className="rc-token-opt-escrow" title="V1 USDC production escrow (Sourcify exact_match, Arc 5042)">
+                  {tokenCfg.escrow.slice(0, 10)}…{tokenCfg.escrow.slice(-8)}
+                </code>
+              </span>
+              <span className="rc-token-opt-check" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#06222B" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 10.5l4 4 8-9" />
+                </svg>
+              </span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={protocol === "V2"}
+              onClick={() => selectProtocol("V2")}
+              className={`rc-token-opt${protocol === "V2" ? " is-selected" : ""}`}
+            >
+              <span className="rc-token-opt-body">
+                <span className="rc-token-opt-name">
+                  V2 <span className="rc-v2-badge">Experimental — unaudited</span>
+                </span>
+                <span className="rc-token-opt-sub">
+                  Adds policyRef/fundingRef on authorize and a seller dispute counter. USDC only. Proven on mainnet, never audited.
+                </span>
+                <code className="rc-token-opt-escrow" title="V2 experimental escrow (Sourcify exact_match, Arc 5042 — NOT audited)">
+                  {v2Escrow.slice(0, 10)}…{v2Escrow.slice(-8)}
+                </code>
+              </span>
+              <span className="rc-token-opt-check" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#06222B" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 10.5l4 4 8-9" />
+                </svg>
+              </span>
+            </button>
+          </div>
+          {isV2 && (
+            <p className="rcx-hint" style={{ marginTop: 12 }}>
+              V2 is live on Arc mainnet and Sourcify-verified, but it has no security-firm audit and the indexer doesn&apos;t track it — the dashboard reads V2 receipts straight from chain. Funds you lock on V2 are your own risk.
+            </p>
+          )}
+        </section>
+
+        {/* payment token selector — one escrow instance per token */}
+        <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "110ms" }} aria-label="Payment token">
+          <div className="rc-new-card-head">
+            <span className="rc-new-num" aria-hidden="true">02</span>
+            <div>
+              <h2>Payment token</h2>
+              <p>
+                {isV2
+                  ? "V2 settles USDC only — the experimental escrow has a single token instance."
+                  : "Each token has its own audited escrow instance. Pick the one the deal is priced in."}
+              </p>
+            </div>
+          </div>
+          {isV2 ? (
+            <div className="rc-token-opts" aria-label="Payment token (V2 is USDC-only)">
+              <div className="rc-token-opt is-selected">
+                <span className="rc-token-opt-icon" aria-hidden="true">
+                  <TokenIcon token="USDC" size={44} />
+                </span>
+                <span className="rc-token-opt-body">
+                  <span className="rc-token-opt-name">USDC</span>
+                  <span className="rc-token-opt-sub">
+                    USD Coin · the only token the V2 escrow settles
+                  </span>
+                </span>
+              </div>
+            </div>
+          ) : (
           <div className="rc-token-opts" role="radiogroup" aria-label="Payment token">
             {(Object.keys(PAYMENT_TOKENS) as PaymentTokenSymbol[]).map((sym) => {
               const selected = sym === tokenSymbol;
@@ -523,6 +661,7 @@ export default function NewReceiptPage() {
               );
             })}
           </div>
+          )}
         </section>
 
         {/* Founder order: a USDC-only user picking EURC is never stranded. */}
@@ -535,7 +674,7 @@ export default function NewReceiptPage() {
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "170ms" }} aria-label="Receipt details">
             <div className="rc-new-card-head">
-              <span className="rc-new-num" aria-hidden="true">02</span>
+              <span className="rc-new-num" aria-hidden="true">03</span>
               <div>
                 <h2>The deal</h2>
                 <p>Who gets paid, how much, for what — and by when. All four become part of the terms you sign.</p>
@@ -632,12 +771,39 @@ export default function NewReceiptPage() {
                 </p>
               )}
             </div>
+
+            {/* V2 only: policyRef — trust-stack composition ref for the 7-param authorize */}
+            {isV2 && (
+              <div className="rc-field">
+                <label className="rcx-label" htmlFor="nr-policyref">
+                  policyRef <span className="rcx-hint">(optional)</span>
+                </label>
+                <p className="rcx-hint">
+                  A 32-byte reference the V2 escrow stores with the receipt (trust-stack composition). Leave empty for zeroed refs — standalone, identical to V1.
+                </p>
+                <input
+                  id="nr-policyref"
+                  type="text"
+                  placeholder="0x… (64 hex chars) or empty"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="rcx-input rcx-mono"
+                  value={policyRef}
+                  onChange={(e) => setPolicyRef(e.target.value)}
+                />
+                {!policyRefValid && (
+                  <p className="rcx-field-error" role="alert">
+                    Enter a valid 0x-prefixed 32-byte hex string, or leave it empty.
+                  </p>
+                )}
+              </div>
+            )}
           </section>
 
           {/* what the wallet will be asked to sign */}
           <section className="rc-new-card rcx-rise" style={{ ["--rcx-i" as string]: "200ms" }} aria-label="What your wallet will be asked to sign">
             <div className="rc-new-card-head">
-              <span className="rc-new-num" aria-hidden="true">03</span>
+              <span className="rc-new-num" aria-hidden="true">04</span>
               <div>
                 <h2>What your wallet will be asked to sign</h2>
                 <p>Exactly three prompts, in order. Nothing else — if a fourth appears, reject it.</p>
@@ -840,6 +1006,14 @@ export default function NewReceiptPage() {
               <div className="rcx-note rcx-note-error" style={{ marginTop: 18 }} role="alert">
                 <p style={{ margin: "0 0 6px", fontWeight: 800 }}>That didn&apos;t go through.</p>
                 <p style={{ margin: 0 }}>{fatal}</p>
+                {fatalTechnical && (
+                  <details className="rc-details" style={{ marginTop: 8 }}>
+                    <summary>Technical details</summary>
+                    <p className="rc-muted" style={{ margin: "6px 0 0" }}>
+                      <code>{fatalTechnical}</code>
+                    </p>
+                  </details>
+                )}
                 {paymentIdTaken && openedPaymentId && (
                   <p style={{ margin: "10px 0 0" }}>
                     <Link to={`/dashboard/r/${openedPaymentId}`} style={{ color: "#35E0FF", fontWeight: 700 }}>

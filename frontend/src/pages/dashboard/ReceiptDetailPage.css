@@ -725,3 +725,77 @@
     flex: 1;
   }
 }
+
+/* ---------- print / PDF top row ---------- */
+.rc-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.rc-toprow .rc-back {
+  margin-bottom: 0;
+}
+
+/* ---------- pre-send simulation notice ---------- */
+.rc-sim {
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 14px 0 0;
+}
+.rc-sim-checking {
+  background: rgba(53, 224, 255, 0.07);
+  border: 1px solid rgba(53, 224, 255, 0.4);
+}
+.rc-sim-passed {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  color: #a7f3d0;
+}
+.rc-sim-blocked {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+}
+.rc-sim-unavailable {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+}
+.rc-sim-title {
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.rc-sim-blocked .rc-sim-title {
+  color: #fca5a5;
+}
+.rc-sim-unavailable .rc-sim-title {
+  color: #fde68a;
+}
+.rc-sim-msg {
+  margin: 0 0 8px;
+}
+.rc-sim .rc-btn {
+  margin-top: 10px;
+}
+
+/* ---------- V2 experimental banner ---------- */
+.rc-v2-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(244, 254, 255, 0.82);
+  background: rgba(255, 178, 36, 0.08);
+  border: 1px solid rgba(255, 178, 36, 0.35);
+  border-radius: 10px;
+}
+.rc-v2-banner .rc-v2-badge {
+  margin-left: 0;
+  flex-shrink: 0;
+  margin-top: 2px;
+}

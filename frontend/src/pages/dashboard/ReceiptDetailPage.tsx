@@ -6,7 +6,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { keccak256, stringToHex } from "viem";
 import {
   AlertDialog,
@@ -22,6 +22,16 @@ import {
 import { Toaster, toast } from "../../components/ui/sonner";
 import TokenIcon from "../../components/TokenIcon";
 import AppShell from "../../components/dashboard/AppShell";
+import ReceiptPrintSheet from "../../components/dashboard/ReceiptPrintSheet";
+import SimulationNotice, {
+  type SimPhase,
+} from "../../components/dashboard/SimulationNotice";
+import {
+  previewToSimulationTarget,
+  simulate,
+  type SimulationOutcome,
+} from "../../lib/simulate";
+import { buildPrintModel } from "../../lib/printReceipt";
 import { useWallet } from "../../components/dashboard/WalletContext";
 import { LifecycleSteps } from "../../components/dashboard/Lifecycle";
 import "../../styles/app.css";
@@ -41,11 +51,14 @@ import {
   isValidPaymentId,
   readChainNow,
   readReceiptFromChain,
+  readV2Disputes,
+  readV2ReceiptFromChain,
   shortHex,
   signAndBroadcast,
   tokenSymbolForEscrow,
   txUrl,
   UserRejectedError,
+  V2_ESCROW_ADDRESS,
 } from "../../lib/chain";
 import "./ReceiptDetailPage.css";
 
@@ -94,6 +107,11 @@ interface ReceiptDetail {
   escrow?: string;
   /** Payment token symbol, derived by the API from the escrow address. */
   token?: string;
+  /**
+   * Oracle attestation block (T0-O tier, win/oracle-tier branch) — rendered
+   * in the print view only when present; passed through verbatim.
+   */
+  oracle?: unknown;
 }
 
 type LoadState =
@@ -262,9 +280,23 @@ function TechnicalNote({ kind }: { kind: ActionKind }) {
 
 export default function ReceiptDetailPage() {
   const { paymentId } = useParams<{ paymentId: string }>();
+  const [searchParams] = useSearchParams();
+  // Explicit opt-in from the New Receipt flow (or the V2 dashboard tab):
+  // ?protocol=v2 loads the receipt from the experimental V2 escrow.
+  const forceV2 = searchParams.get("protocol") === "v2";
 
   const [load, setLoad] = useState<LoadState>({ kind: "loading" });
   const [chain, setChain] = useState<ChainReceiptView | null>(null);
+  // Whether this receipt lives on the experimental V2 escrow. Drives the
+  // chain reader (V2 struct layout), the actions' escrow target, and the
+  // "Experimental — unaudited" banner.
+  const [isV2Receipt, setIsV2Receipt] = useState(forceV2);
+  // V2-only lifecycle facts: dispute counter + trust-stack refs.
+  const [v2Meta, setV2Meta] = useState<{
+    disputes: string;
+    policyRef: string;
+    fundingRef: string;
+  } | null>(null);
   // The escrow instance this receipt lives on (multi-asset). Comes from the
   // API's receipt view; every chain read and action tx targets it. Defaults
   // to the USDC production escrow until the API answers.
@@ -295,6 +327,42 @@ export default function ReceiptDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionDone, setActionDone] = useState<string | null>(null);
 
+  // Pre-send simulation (lib/simulate.ts): every action preview is
+  // eth_call'd UNWRAPPED against the escrow contract before the user may
+  // sign. A revert disables the sign button with the reason in user words.
+  const [simPhase, setSimPhase] = useState<SimPhase>("idle");
+  const [simOutcome, setSimOutcome] = useState<SimulationOutcome | undefined>(
+    undefined,
+  );
+  const [simFor, setSimFor] = useState<ActionKind | null>(null);
+  const simSeq = useRef(0);
+
+  const runSimulation = useCallback(
+    (preview: ActionTxPreview) => {
+      const seq = ++simSeq.current;
+      setSimPhase("checking");
+      setSimOutcome(undefined);
+      setSimFor(preview.kind);
+      void simulate(previewToSimulationTarget(preview), {
+        from: wallet ?? undefined,
+      }).then((outcome) => {
+        if (simSeq.current !== seq) return; // superseded by a newer preview
+        setSimOutcome(outcome);
+        setSimPhase(
+          outcome.ok ? "passed" : outcome.kind === "revert" ? "blocked" : "unavailable",
+        );
+      });
+    },
+    [wallet],
+  );
+
+  const resetSimulation = useCallback(() => {
+    simSeq.current += 1; // cancel any in-flight check
+    setSimPhase("idle");
+    setSimOutcome(undefined);
+    setSimFor(null);
+  }, []);
+
   // Flag form
   const [flagReason, setFlagReason] = useState("");
   // Attest form
@@ -310,10 +378,65 @@ export default function ReceiptDetailPage() {
 
   const validId = isValidPaymentId(paymentId);
 
+  const ZERO32 = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+  /**
+   * Load a V2 receipt straight from chain — the indexer does not track the
+   * experimental tier, so chain is the only source. Synthesizes the
+   * ReceiptDetail view from the V2 struct + disputes counter.
+   */
+  const loadV2FromChain = useCallback(async () => {
+    if (!validId || !paymentId) return;
+    const view = await readV2ReceiptFromChain(paymentId);
+    if (view.statusName === "NONE" || view.statusName === "UNKNOWN") {
+      throw new Error(
+        "No receipt with this paymentId on the V2 escrow either.",
+      );
+    }
+    const disputes = await readV2Disputes(view.seller);
+    setV2Meta({
+      disputes: disputes.toString(),
+      policyRef: view.policyRef,
+      fundingRef: view.fundingRef,
+    });
+    setEscrowAddr(V2_ESCROW_ADDRESS);
+    setIsV2Receipt(true);
+    const detail: ReceiptDetail = {
+      paymentId,
+      status: view.statusName,
+      buyer: view.buyer,
+      seller: view.seller,
+      amount: view.amount.toString(),
+      deadline: Number(view.deadline),
+      termsHash: view.termsHash,
+      outputHash: view.outputHash === ZERO32 ? undefined : view.outputHash,
+      attestedAt: view.attestedAt > 0n ? Number(view.attestedAt) : undefined,
+      flagReasonHash:
+        view.flagReasonHash === ZERO32 ? undefined : view.flagReasonHash,
+      timeline: [],
+      escrow: V2_ESCROW_ADDRESS,
+      token: "USDC",
+    };
+    setLoad({ kind: "ready", receipt: detail });
+  }, [paymentId, validId]);
+
   // --- load receipt from the indexer API -----------------------------------
   const loadReceipt = useCallback(async () => {
     if (!validId) {
       setLoad({ kind: "invalid-id" });
+      return;
+    }
+    // Explicit V2: skip the indexer entirely — chain is the source.
+    if (forceV2) {
+      setLoad({ kind: "loading" });
+      try {
+        await loadV2FromChain();
+      } catch (err) {
+        setLoad({
+          kind: "error",
+          message: `Could not load the V2 receipt from chain: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
       return;
     }
     const base = apiBase();
@@ -331,10 +454,18 @@ export default function ReceiptDetailPage() {
         headers: { accept: "application/json" },
       });
       if (res.status === 404) {
+        // The indexer doesn't track V2 — probe the experimental escrow
+        // before declaring the receipt missing.
+        try {
+          await loadV2FromChain();
+          return;
+        } catch {
+          /* fall through to the not-found message */
+        }
         setLoad({
           kind: "not-found",
           message:
-            "No receipt with this paymentId in the indexer. It may not exist on-chain, or the indexer has not caught up yet.",
+            "No receipt with this paymentId in the indexer or on the V2 escrow. It may not exist on-chain, or the indexer has not caught up yet.",
         });
         return;
       }
@@ -355,30 +486,45 @@ export default function ReceiptDetailPage() {
         message: `Could not load the receipt: ${err instanceof Error ? err.message : String(err)}`,
       });
     }
-  }, [paymentId, validId]);
+  }, [paymentId, validId, forceV2, loadV2FromChain]);
 
   useEffect(() => {
     void loadReceipt();
   }, [loadReceipt, refreshTick]);
 
   // --- read the timing-critical values from CHAIN (never the indexer clock) --
-  // Targets the receipt's own escrow instance (multi-asset).
+  // Targets the receipt's own escrow instance (multi-asset; V2 uses the
+  // 11-field struct layout — never the V1 reader).
   const refreshChain = useCallback(async () => {
     if (!validId || !paymentId) return;
     try {
       const [view, now] = await Promise.all([
-        readReceiptFromChain(paymentId, escrowAddr),
+        isV2Receipt
+          ? readV2ReceiptFromChain(paymentId)
+          : readReceiptFromChain(paymentId, escrowAddr),
         readChainNow(),
       ]);
       setChain(view);
       setChainNow(now);
       setChainError(null);
+      if (isV2Receipt) {
+        const disputes = await readV2Disputes(view.seller);
+        setV2Meta((m) =>
+          m
+            ? { ...m, disputes: disputes.toString() }
+            : {
+                disputes: disputes.toString(),
+                policyRef: ZERO32,
+                fundingRef: ZERO32,
+              },
+        );
+      }
     } catch (err) {
       setChainError(
         `Chain read failed: ${err instanceof Error ? err.message : String(err)}. Time-sensitive buttons stay locked until the chain answers.`,
       );
     }
-  }, [paymentId, validId, escrowAddr]);
+  }, [paymentId, validId, escrowAddr, isV2Receipt]);
 
   useEffect(() => {
     void refreshChain();
@@ -389,8 +535,13 @@ export default function ReceiptDetailPage() {
   const status = receipt ? normalizeStatus(receipt.status) : "UNKNOWN";
   // Payment-token symbol for display: prefer the API's derived `token`,
   // fall back to the escrow-address map, default USDC (pre-multi-asset).
+  // V2 is USDC-only by construction.
   const symbol: PaymentTokenSymbol =
-    receipt?.token === "EURC" ? "EURC" : (tokenSymbolForEscrow(receipt?.escrow) ?? "USDC");
+    isV2Receipt
+      ? "USDC"
+      : receipt?.token === "EURC"
+        ? "EURC"
+        : (tokenSymbolForEscrow(receipt?.escrow) ?? "USDC");
   useEffect(() => {
     if (status !== "ATTESTED" && status !== "OPEN") return;
     const t = setInterval(() => void refreshChain(), 15_000);
@@ -497,6 +648,7 @@ export default function ReceiptDetailPage() {
           toast.success(done, { id: toastId });
           setPendingAction(null);
           setDialogPreview(null);
+          resetSimulation();
           setRefreshTick((t) => t + 1); // reload receipt + chain state
         }
       } catch (err) {
@@ -515,7 +667,7 @@ export default function ReceiptDetailPage() {
         setSending(false);
       }
     },
-    [validId, wallet],
+    [validId, wallet, resetSimulation],
   );
 
   /** Non-destructive step 1: show the exact tx, then the wallet prompt. */
@@ -529,14 +681,18 @@ export default function ReceiptDetailPage() {
       setActionDone(null);
       setSentTx(null);
       try {
-        setPendingAction({ kind, preview: buildActionTx(kind, paymentId, extra, escrowAddr) });
+        const preview = buildActionTx(kind, paymentId, extra, escrowAddr);
+        setPendingAction({ kind, preview });
+        // Pre-send check: eth_call the unwrapped escrow step. A revert
+        // disables the sign button (see the preview panel below).
+        runSimulation(preview);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setActionError(msg);
         toast.error(msg);
       }
     },
-    [paymentId, validId, escrowAddr],
+    [paymentId, validId, escrowAddr, runSimulation],
   );
 
   /** Destructive step 1: build the exact-tx preview shown inside the dialog. */
@@ -547,7 +703,11 @@ export default function ReceiptDetailPage() {
     ) => {
       if (!validId || !paymentId) return;
       try {
-        setDialogPreview(buildActionTx(kind, paymentId, extra, escrowAddr));
+        const preview = buildActionTx(kind, paymentId, extra, escrowAddr);
+        setDialogPreview(preview);
+        // Pre-send check: eth_call the unwrapped escrow step. A revert
+        // disables the dialog's sign button.
+        runSimulation(preview);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setActionError(msg);
@@ -555,14 +715,15 @@ export default function ReceiptDetailPage() {
         setDialogPreview(null);
       }
     },
-    [paymentId, validId, escrowAddr],
+    [paymentId, validId, escrowAddr, runSimulation],
   );
 
   const cancelPreview = useCallback(() => {
     if (sending) return;
     setPendingAction(null);
     setSentTx(null);
-  }, [sending]);
+    resetSimulation();
+  }, [sending, resetSimulation]);
 
   // --- attest form: compute sha256 of pasted bytes --------------------------
   const onComputeAttestHash = useCallback(async () => {
@@ -684,6 +845,33 @@ export default function ReceiptDetailPage() {
   const meaning = STATUS_MEANING[status];
   const chainWindowSecs = chain ? Number(chain.challengeWindow) : null;
 
+  // Print model — the exact loaded receipt, mapped verbatim (lib/printReceipt).
+  const printModel = receipt
+    ? buildPrintModel({
+        paymentId: receipt.paymentId,
+        status,
+        buyer: receipt.buyer,
+        seller: receipt.seller,
+        amount: receipt.amount,
+        token: symbol,
+        deadline: receipt.deadline,
+        termsHash: receipt.termsHash,
+        terms: receipt.terms,
+        outputHash: receipt.outputHash,
+        attestedAt: receipt.attestedAt,
+        flagReasonHash: receipt.flagReasonHash,
+        flaggedBy: receipt.flaggedBy,
+        escrow: receipt.escrow ?? null,
+        timeline: receipt.timeline,
+        oracle: receipt.oracle,
+      })
+    : null;
+
+  // The sign button stays disabled while the pre-send check is running or
+  // has proven the tx would revert — only for the action the check ran on.
+  const simBlocksSign = (kind: ActionKind): boolean =>
+    simFor === kind && (simPhase === "blocked" || simPhase === "checking");
+
   // Capability checks (role by on-chain record, never by allowlist)
   const windowStillOpen = status === "ATTESTED" && windowOpen === true;
   const windowClosed = status === "ATTESTED" && windowOpen === false;
@@ -693,9 +881,21 @@ export default function ReceiptDetailPage() {
     <AppShell title="Receipt">
       <div className="rc-detail">
       <Toaster />
-      <Link to="/dashboard" className="rc-back">
-        ← All receipts
-      </Link>
+      <div className="rc-toprow">
+        <Link to="/dashboard" className="rc-back">
+          ← All receipts
+        </Link>
+        <button
+          className="rc-btn rc-btn-ghost"
+          onClick={() => window.print()}
+          title="Open the browser print dialog — choose “Save as PDF” for a paper record of this receipt"
+        >
+          Print / Save as PDF
+        </button>
+      </div>
+      {/* Print-only sheet (portal on document.body; hidden on screen, the
+          ONLY thing shown by the @media print stylesheet). */}
+      <ReceiptPrintSheet model={printModel} />
 
       {/* (1) Header: status pill + plain meaning + locked amount ---------- */}
       <header className="rc-panel rc-header rcx-rise">
@@ -755,7 +955,67 @@ export default function ReceiptDetailPage() {
             ⚠ {chainError}
           </p>
         )}
+        {isV2Receipt && (
+          <p className="rc-v2-banner" role="note">
+            <span className="rc-v2-badge">Experimental — unaudited</span>
+            <span>
+              This receipt lives on the V2 escrow: proven on mainnet and
+              Sourcify-verified, but <strong>not audited</strong> and not
+              tracked by the indexer. Everything on this page is read
+              straight from chain.
+            </span>
+          </p>
+        )}
       </header>
+
+      {/* (1b) V2 lifecycle — experimental-tier facts, read from chain ------ */}
+      {isV2Receipt && (
+        <section className="rc-panel" aria-label="V2 lifecycle">
+          <h2>V2 lifecycle</h2>
+          <p className="rc-muted">
+            Deltas the experimental escrow adds over V1 — all read on-chain,
+            all the time.
+          </p>
+          <dl className="rc-kv">
+            <div>
+              <dt>Disputes against this seller</dt>
+              <dd>
+                <strong>{v2Meta?.disputes ?? "…"}</strong>
+                <span className="rc-muted">
+                  {" "}
+                  — incremented only when a <code>void()</code> refunds after a
+                  buyer flag. <code>voidAfterDeadline</code> never counts:
+                  liveness ≠ dishonesty.
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>policyRef</dt>
+              <dd>
+                <code>{v2Meta?.policyRef ?? "…"}</code>
+                <span className="rc-muted">
+                  {" "}
+                  — trust-stack composition ref stored at authorize; zeroed =
+                  standalone, identical to V1.
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>fundingRef</dt>
+              <dd>
+                <code>{v2Meta?.fundingRef ?? "…"}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>Escrow</dt>
+              <dd>
+                <code>{V2_ESCROW_ADDRESS}</code>{" "}
+                <span className="rc-muted">(V2 experimental, USDC only)</span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+      )}
 
       {/* (2) Timeline — animated-list entrances ------------------------------ */}
       <section className="rc-panel" aria-label="Timeline">
@@ -1090,6 +1350,13 @@ export default function ReceiptDetailPage() {
                           try again.
                         </p>
                       )}
+                      {dialogPreview && (
+                        <SimulationNotice
+                          phase={simFor === dialogPreview.kind ? simPhase : "idle"}
+                          outcome={simOutcome}
+                          onRerun={() => runSimulation(dialogPreview)}
+                        />
+                      )}
                       <AlertDialogFooter>
                         <AlertDialogCancel>
                           Keep the receipt as is
@@ -1098,7 +1365,8 @@ export default function ReceiptDetailPage() {
                           disabled={
                             !flagReason.trim() ||
                             sending ||
-                            dialogPreview?.kind !== "flag"
+                            dialogPreview?.kind !== "flag" ||
+                            simBlocksSign("flag")
                           }
                           onClick={() => {
                             if (dialogPreview) void sendAction(dialogPreview);
@@ -1218,10 +1486,21 @@ export default function ReceiptDetailPage() {
                           try again.
                         </p>
                       )}
+                      {dialogPreview && (
+                        <SimulationNotice
+                          phase={simFor === dialogPreview.kind ? simPhase : "idle"}
+                          outcome={simOutcome}
+                          onRerun={() => runSimulation(dialogPreview)}
+                        />
+                      )}
                       <AlertDialogFooter>
                         <AlertDialogCancel>Don&apos;t refund</AlertDialogCancel>
                         <AlertDialogAction
-                          disabled={sending || dialogPreview?.kind !== "void"}
+                          disabled={
+                            sending ||
+                            dialogPreview?.kind !== "void" ||
+                            simBlocksSign("void")
+                          }
                           onClick={() => {
                             if (dialogPreview) void sendAction(dialogPreview);
                           }}
@@ -1299,6 +1578,13 @@ export default function ReceiptDetailPage() {
                               and try again.
                             </p>
                           )}
+                          {dialogPreview && (
+                            <SimulationNotice
+                              phase={simFor === dialogPreview.kind ? simPhase : "idle"}
+                              outcome={simOutcome}
+                              onRerun={() => runSimulation(dialogPreview)}
+                            />
+                          )}
                           <AlertDialogFooter>
                             <AlertDialogCancel>
                               Don&apos;t refund
@@ -1306,7 +1592,8 @@ export default function ReceiptDetailPage() {
                             <AlertDialogAction
                               disabled={
                                 sending ||
-                                dialogPreview?.kind !== "voidAfterDeadline"
+                                dialogPreview?.kind !== "voidAfterDeadline" ||
+                                simBlocksSign("voidAfterDeadline")
                               }
                               onClick={() => {
                                 if (dialogPreview) void sendAction(dialogPreview);
@@ -1444,6 +1731,11 @@ export default function ReceiptDetailPage() {
               else. If anything differs in the wallet prompt, reject it.
             </p>
             <TxPreview preview={pendingAction.preview} />
+            <SimulationNotice
+              phase={simFor === pendingAction.kind ? simPhase : "idle"}
+              outcome={simOutcome}
+              onRerun={() => runSimulation(pendingAction.preview)}
+            />
             {sentTx && (
               <p className="rc-pending" role="status">
                 Transaction sent:{" "}
@@ -1456,8 +1748,13 @@ export default function ReceiptDetailPage() {
             <div className="rc-row">
               <button
                 className="rc-btn rc-btn-primary"
-                disabled={sending}
+                disabled={sending || simBlocksSign(pendingAction.kind)}
                 onClick={() => void sendAction(pendingAction.preview)}
+                title={
+                  simBlocksSign(pendingAction.kind)
+                    ? "Disabled: the pre-send check proved this transaction would revert."
+                    : undefined
+                }
               >
                 {sending ? (
                   <>
