@@ -61,6 +61,29 @@ V1.1 = V1 with exactly two deltas: all payouts route through `_sendOrHold` (fail
 
 **Honest caveat:** the freeze path was executed on mainnet against a pausable TEST token (`0x5A1166eC096e12C0C6187695F82B7F4b285389Df`, no economic value); a real-USDC freeze cannot be induced on mainnet without Circle blacklisting an address. The failure mode exercised (token `transfer` reverts) is exactly what a frozen-USDC payout does at the EVM level — the contract cannot distinguish them.
 
+### 2.3 External oracle trigger — end-to-end (WIN-order run, 2026-10-15)
+
+One receipt whose delivery evidence comes from a **REAL EXTERNAL third-party oracle path** (a pinned-key courier signature verified on-chain by `ecrecover`), not from the seller's own attestation.
+
+- Oracle: fresh throwaway courier keypair `0xDd406f432daAA903b94e3a801E5bb60e9E0F5525`, generated off-chain for this run and **shredded after use** (key held no funds; the courier only signs).
+- issuerId = `keccak256("ecdsa:win-oracle-1")` = `0x22aad86fc46cbaec2361864edd19fa126bfa0f0a62e985acaacbc743efcdb128` (ECDSA_PINNED).
+- paymentId = `keccak256("win-oracle-e2e-1")` = `0x25f4091febc4518191546cef160046b5c54ed6c4ad2eac230baccdad04438b58`, 0.01 USDC (10000 base units), FP-USDC `0x54F05A5214d99cA458d142bA9E2f0CB77c1B2470`.
+- termsHash = `keccak256` of: *"Delivery of the RAINCHECK WIN-ORDER oracle run summary: a one-page audit note listing the on-chain tx hashes for registerIssuer, authorize, attestWithOracle, attestDelivery, and capture for this payment, delivered by the win-oracle-1 courier to the buyer."* = `0x4a0a29855f198f3f9c6967a0d3fafb0c8d7d48d7618a948d19b5689344872afa`.
+- Delivery payload (the concrete artifact): JSON `{"paymentId":"0x25f4…38b58","artifact":"win-oracle-delivery-note.txt","noteSha256":"de1327b73ce1881a7dafb90d30561f5d9420e346f9c3c417968080b8237ca5c2","courier":"win-oracle-1","deliveredTo":"0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3","deliveredAt":"<2026-10-15T~02:1xZ, sign time>"}`; outputHash = `keccak256(payload)` = `0x49c0eb8823ce4dd6993cbb3ad5aa331035710e4174f36ed011fd1ff3fee77ce0` (exact value verified on-chain; only the deliveredAt timestamp is approximate here).
+- Oracle digest `0xa3a63f99213ba91c668488d758d7d856445ae0f57230e2180a4c2fe4c6c5d762` = `oracleDigest(paymentId, outputHash)`; signed **RAW** (no EIP-191 prefix) by the courier key, v=28 — the v value was chosen only after on-chain `verifyClaim` returned `ok=true` + `recovered == pinned key` (v=1 and v=27 were tried and rejected by the contract itself).
+
+| Tx | Action | What it proves |
+|---|---|---|
+| [`0x54bc874c63871ef7f685e568f54c149e01efea43aa0fe5943cade2930ee0f809`](https://explorer.arc.io/tx/0x54bc874c63871ef7f685e568f54c149e01efea43aa0fe5943cade2930ee0f809) | registerIssuer(ECDSA_PINNED, courier key) | trust anchor for a third-party oracle pinned on-chain; `IssuerRegistered` emitted (block 25997339) |
+| [`0xff5bd1e1d81d15f6334aa326f089d2a1bdf1dda13668dada11be9716344492b6`](https://explorer.arc.io/tx/0xff5bd1e1d81d15f6334aa326f089d2a1bdf1dda13668dada11be9716344492b6) | authorize 0.01 USDC | receipt OPEN on FP-USDC; `RaincheckOpened` + 10000-base-unit USDC transfer (block 25997356) |
+| [`0x97d8ce20a2eb5c9275905dc80c3ba00b99e404a4c1a2c8471996b4e64f0a27fb`](https://explorer.arc.io/tx/0x97d8ce20a2eb5c9275905dc80c3ba00b99e404a4c1a2c8471996b4e64f0a27fb) | attestWithOracle (courier's real signature) | `ecrecover` matches the pinned courier key — a THIRD PARTY signed the delivery digest; `attestations(0x25f4…38b58)` = issuer `0x22aad8…128`, outputHash `0x49c0eb…77ce0`, attestedAt 1792019080 (block 25997461) |
+| [`0xd50d08bb3cd4bd6648cb6b9b1a7a4a79e31b34a0e80312f2ed2a8e86dd0e8231`](https://explorer.arc.io/tx/0xd50d08bb3cd4bd6648cb6b9b1a7a4a79e31b34a0e80312f2ed2a8e86dd0e8231) | attestDelivery (seller path) | receipt → ATTESTED with the same outputHash (block 25997471) |
+| [`0x5e2e277ba2dce8f7ff980b26440fa52ec9bca36df08cbf4fe93cdb51cffd1daa`](https://explorer.arc.io/tx/0x5e2e277ba2dce8f7ff980b26440fa52ec9bca36df08cbf4fe93cdb51cffd1daa) | capture (post-300s window) | receipt → CAPTURED; `receipts(paymentId).status == 3` verified on-chain (block 25998095) |
+
+All five txs `status=1` on Arc mainnet 5042.
+
+**Honest scoping:** the oracle attestation IS recorded on-chain in the standalone OracleRegistry (real third-party signature, real ecrecover check), and the receipt carries the same `outputHash` — but the escrow capture above went through the **normal seller path** (`attestDelivery` + `capture`), not through an oracle-gated escrow flow. The ORACLE_ONLY/ORACLE_PREFERRED wire-up (escrow accepts a receipt only when a registry attestation exists) remains **specified-not-live** — the registry contract itself documents this (see §2.1 and the contract header). The courier key was a single-use throwaway, shredded after the run, so no lingering trust anchor exists for it.
+
 ## 3. Dust transactions (Arc mainnet, dust amounts only)
 
 All txs went through the Memo contract (`execute` wrapping) where noted; Memo anchoring verified per-tx via `target==escrow` + `callDataHash` match.
