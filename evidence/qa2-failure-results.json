@@ -1,0 +1,74 @@
+{
+  "txs": [
+    {
+      "label": "approve 0.01 USDC -> escrow",
+      "kind": "approve",
+      "hash": "0xbd2b58ba25f99587db92e810d265c44219be23474c97c7fcd35ac0876f65d315",
+      "explorer": "https://explorer.arc.io/tx/0xbd2b58ba25f99587db92e810d265c44219be23474c97c7fcd35ac0876f65d315",
+      "blockNumber": "25962318",
+      "gasUsed": "79543",
+      "costWei": "1590860082804263",
+      "status": "success"
+    },
+    {
+      "label": "C: authorize 0.01 USDC",
+      "kind": "authorize",
+      "hash": "0xa6055c8b7d2df7d7e8937a7719262943a162bf4702b985a111ca4159988bf929",
+      "explorer": "https://explorer.arc.io/tx/0xa6055c8b7d2df7d7e8937a7719262943a162bf4702b985a111ca4159988bf929",
+      "blockNumber": "25962328",
+      "gasUsed": "217509",
+      "costWei": "4350180226426869",
+      "status": "success"
+    },
+    {
+      "label": "C: capture BEFORE attestation (expect revert)",
+      "kind": "capture",
+      "hash": "0x98f696c9af23a4aeb6036ff83ffa5dfb680b5e53a16097cd7f95b93d360cbe34",
+      "explorer": "https://explorer.arc.io/tx/0x98f696c9af23a4aeb6036ff83ffa5dfb680b5e53a16097cd7f95b93d360cbe34",
+      "blockNumber": "25962453",
+      "gasUsed": "43242",
+      "costWei": "864840049858026",
+      "status": "reverted"
+    }
+  ],
+  "checks": [
+    {
+      "name": "deployer address matches expected",
+      "ok": true,
+      "detail": "0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3"
+    },
+    {
+      "name": "paymentId C fresh (status NONE)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "C: OPEN after authorize",
+      "ok": true,
+      "detail": "OPEN"
+    },
+    {
+      "name": "C: OPEN after authorize",
+      "ok": true,
+      "detail": "OPEN"
+    },
+    {
+      "name": "revert reason is 'not ATTESTED'",
+      "ok": true,
+      "detail": "not ATTESTED"
+    },
+    {
+      "name": "C: capture tx mined with status=0 (reverted)",
+      "ok": true,
+      "detail": "reverted"
+    },
+    {
+      "name": "C: status still OPEN after reverted capture (funds locked)",
+      "ok": true,
+      "detail": "OPEN"
+    }
+  ],
+  "paymentId": "0x7445c77ea964f1490cb191387f5a3fd4db95a68332710ca34633aaa3973f3ad7",
+  "revertReasonPreview": "not ATTESTED",
+  "captureTx": "0x98f696c9af23a4aeb6036ff83ffa5dfb680b5e53a16097cd7f95b93d360cbe34"
+}

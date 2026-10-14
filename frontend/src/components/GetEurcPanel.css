@@ -1,0 +1,467 @@
+/* GetEurcPanel — the "Get EURC" panel (GETEURC).
+   DESIGN STANDARD §9 tokens (binding): bg #0B1220, accent #35E0FF,
+   paper #F4EFE6, text #F4FEFF. No third accent. Dashboard card anatomy
+   (§6): no glow, no tilt, no marketing effects. Reduced-motion guard
+   on the one looping indicator. */
+
+.gep {
+  --gep-bg: #0b1220;
+  --gep-card: #101a2e;
+  --gep-accent: #35e0ff;
+  --gep-text: #f4feff;
+  --gep-muted: rgba(244, 254, 255, 0.66);
+  --gep-faint: rgba(244, 254, 255, 0.44);
+  --gep-rule: rgba(244, 254, 255, 0.14);
+  --gep-field: rgba(244, 254, 255, 0.06);
+  background: var(--gep-bg);
+  color: var(--gep-text);
+  border-radius: 20px;
+  padding: clamp(24px, 4vw, 44px);
+  max-width: 76rem;
+  margin: 0 auto;
+}
+
+.gep-kicker {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gep-accent);
+}
+
+.gep-title {
+  margin: 0;
+  font-family: "Archivo Black", "Inter", system-ui;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.gep-accent {
+  color: var(--gep-accent);
+}
+
+.gep-sub {
+  margin: 12px 0 0;
+  max-width: 62ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--gep-muted);
+}
+
+.gep-paths {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
+}
+
+.gep-path {
+  background: var(--gep-card);
+  border: 1px solid var(--gep-rule);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.gep-path-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.gep-path-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.gep-path-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 999px;
+  border: 1.5px solid var(--gep-accent);
+  color: var(--gep-accent);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.gep-path-desc {
+  margin: 0 0 12px;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--gep-muted);
+}
+
+.gep-path-desc em {
+  color: var(--gep-text);
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* ---------------- amount + wallet ---------------- */
+
+.gep-connect p {
+  margin: 0 0 14px;
+  color: var(--gep-muted);
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+
+.gep-amount label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gep-faint);
+}
+
+.gep-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--gep-field);
+  border: 1px solid var(--gep-rule);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.gep-amount-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--gep-text);
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-family: "Inter", system-ui;
+}
+
+.gep-amount-row input::placeholder {
+  color: var(--gep-faint);
+}
+
+.gep-amount-row:focus-within {
+  border-color: var(--gep-accent);
+}
+
+.gep-amount-sym {
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  color: var(--gep-muted);
+}
+
+.gep-field-error {
+  margin: 8px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #ffb4a8;
+}
+
+/* ---------------- quote ---------------- */
+
+.gep-quote {
+  margin-top: 18px;
+  border-top: 1px solid var(--gep-rule);
+  padding-top: 18px;
+}
+
+.gep-quote-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.gep-quote-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gep-faint);
+}
+
+.gep-quote-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.gep-quote-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  color: var(--gep-faint);
+}
+
+.gep-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gep-accent);
+  font-weight: 700;
+}
+
+.gep-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gep-accent);
+  animation: gep-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gep-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gep-live-dot {
+    animation: none;
+  }
+}
+
+.gep-quote-hint {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  color: var(--gep-faint);
+}
+
+.gep-skel {
+  height: 44px;
+  margin-bottom: 10px;
+}
+
+.gep-cta {
+  margin-top: 14px;
+}
+
+.gep-no-route {
+  margin-top: 18px;
+  border: 1px dashed var(--gep-rule);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.gep-no-route p {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--gep-muted);
+}
+
+.gep-error {
+  margin-top: 18px;
+  border: 1px solid rgba(255, 180, 168, 0.4);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.gep-error > p {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--gep-text);
+}
+
+/* ---------------- execution steps ---------------- */
+
+.gep-steps-exec {
+  margin-top: 6px;
+}
+
+.gep-step {
+  border: 1px solid var(--gep-rule);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+  background: rgba(11, 18, 32, 0.5);
+}
+
+.gep-step-title {
+  margin: 0 0 6px;
+  font-weight: 800;
+  font-size: 0.98rem;
+}
+
+.gep-step-desc {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--gep-muted);
+}
+
+.gep-step-done {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  color: var(--gep-accent);
+  font-weight: 700;
+}
+
+.gep-tech {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: var(--gep-faint);
+}
+
+.gep-tech summary {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gep-tech p {
+  margin: 8px 0 0;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.gep-done {
+  margin-top: 16px;
+  border: 1.5px solid var(--gep-accent);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.gep-done-title {
+  margin: 0 0 8px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--gep-accent);
+}
+
+.gep-done p {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--gep-muted);
+}
+
+/* ---------------- bridge guide ---------------- */
+
+.gep-guide {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: gep-step;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.gep-guide > li {
+  counter-increment: gep-step;
+  position: relative;
+  padding-left: 40px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--gep-muted);
+}
+
+.gep-guide > li::before {
+  content: counter(gep-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--gep-field);
+  border: 1px solid var(--gep-rule);
+  color: var(--gep-text);
+  font-weight: 800;
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gep-guide strong {
+  color: var(--gep-text);
+}
+
+.gep-guide code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.85em;
+  color: var(--gep-accent);
+}
+
+.gep-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.gep-addr {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--gep-text);
+  background: var(--gep-field);
+  border: 1px solid var(--gep-rule);
+  padding: 7px 10px;
+  border-radius: 8px;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.gep-copy-btn {
+  cursor: pointer;
+  border: 1px solid var(--gep-rule);
+  background: transparent;
+  color: var(--gep-text);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  min-height: 36px;
+}
+
+.gep-copy-btn:hover {
+  border-color: var(--gep-accent);
+  color: var(--gep-accent);
+}
+
+.gep-explorer-link {
+  font-size: 0.8rem;
+}
+
+/* ExplorerLink's hash style inherits ice-on-dark fine; keep the arrow cyan. */
+.gep .rc-hash {
+  color: var(--gep-text);
+}
+
+/* ActionButton's disabled-reason span is text-ink/70 (built for paper
+   surfaces); on this dark panel it must read as muted ice instead.
+   Design law §7.6: a disabled button is never unexplained. */
+.gep .text-ink\/70 {
+  color: var(--gep-muted);
+}
+
+.gep .text-ink {
+  color: var(--gep-text);
+}

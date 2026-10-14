@@ -1,0 +1,14 @@
+// TypeScript config for the backend test suite.
+// Compiles test/** PLUS the production modules the tests exercise
+// (src/api/**, src/indexer/**, src/config.ts) into dist/. The production dist layout is unchanged;
+// `node --test dist/test/` runs only the test files.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["test/**/*", "src/api/**/*", "src/indexer/**/*", "src/config.ts"]
+}

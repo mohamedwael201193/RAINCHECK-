@@ -1,0 +1,38 @@
+{
+  "route": true,
+  "timestamp": "2026-10-14T19:16:13.517Z",
+  "chainId": 5042,
+  "fromAddress": "0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3",
+  "fromToken": {
+    "address": "0x3600000000000000000000000000000000000000",
+    "symbol": "USDC",
+    "amount": "500000"
+  },
+  "toToken": {
+    "address": "0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+    "symbol": "EURC",
+    "amountEstimated": "448319"
+  },
+  "quote": {
+    "id": "23b53072-0257-4d24-97c7-7549416006f2:0",
+    "tool": "kyberswap",
+    "toolName": "Kyberswap"
+  },
+  "transactions": [
+    {
+      "hash": "0xd503f54ace28b6d25cd535a50932283ca401105b2eb8151b10da0e7558d419a9",
+      "status": "success",
+      "explorerUrl": "https://explorer.arc.io/tx/0xd503f54ace28b6d25cd535a50932283ca401105b2eb8151b10da0e7558d419a9"
+    },
+    {
+      "hash": "0x69872320406f3547a980564d5930b4b0cf727f8685557390f381a456d4e34e60",
+      "status": "success",
+      "explorerUrl": "https://explorer.arc.io/tx/0x69872320406f3547a980564d5930b4b0cf727f8685557390f381a456d4e34e60"
+    }
+  ],
+  "eurcBalanceBeforeBase": "13815",
+  "eurcBalanceAfterBase": "462129",
+  "explorerBase": "https://explorer.arc.io",
+  "proves": "LI.FI USDC->EURC swap route live on Arc 5042 (Kyberswap executor via LI.FI quote).",
+  "note": "Received EURC funds the deployer's EURC balance."
+}

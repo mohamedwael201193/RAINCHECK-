@@ -1,0 +1,236 @@
+{
+  "suite": "E2E-EURC2",
+  "chainId": 5042,
+  "rpc": "https://rpc.mainnet.arc.io",
+  "escrow": "0x3ceBA2FbEb27162Bfc4888F6b61E48bd359C1E0A",
+  "escrowSource": "RaincheckEscrow V1 (Sourcify exact_match, challengeWindow=300)",
+  "token": "0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1",
+  "tokenSymbol": "EURC",
+  "tokenDecimals": 6,
+  "memo": "0x5294E9927c3306DcBaDb03fe70b92e01cCede505",
+  "deployer": "0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3",
+  "deployerRole": "buyer = seller = deployer",
+  "amountPerPath": "10000 (0.01 EURC)",
+  "paymentIds": {
+    "happy": "0x0ea5a46ced446d63d4a811b36e087d2afc396b10458a7a9de3f31913889a2b15",
+    "void": "0x24c57faca9009fce4b5a1750475ddf827d427eae34e98e134ee7224a4334c8c0",
+    "failure": "0xf7c838f4db8d2479a8ed1d529350a3e733de3c30856a43bcb88f8739b8a85913"
+  },
+  "termsHashes": {
+    "happy": "0xed54f0c43c04840cdf99e4f3c19d550fdcd85cf310ac0aa6e913b64e307a6833",
+    "void": "0x807ea2163136687f92fd932b453f866c1aed7f69d5524b5fe69d25d7d1ef890b",
+    "failure": "0xcf26282c2030d99f904388f4a6d436a7c588c54c043e4915c11ed1ba1e609336"
+  },
+  "outputHashes": {
+    "happy": "0xef2dcd536d04852eba937c7058e1c68bf3e635a02788d6cb80df99849e30ebd8",
+    "void": "0x015e18a0c6da855818acb3301047ee76e2ced764325479e3f220d507ad3a1e67"
+  },
+  "flagReasonHash": "0x9be22244f309b6349fbd4b58692f13e1a5a6f74b0ed57599a4179c319bea490d",
+  "failureTx": {
+    "hash": "0x35713984327c26d5149f5129c924c96879563ef302836374ccf9b7e10cb1096e",
+    "explorer": "https://explorer.arc.io/tx/0x35713984327c26d5149f5129c924c96879563ef302836374ccf9b7e10cb1096e",
+    "revertTrace": {
+      "unavailable": "could not coalesce error (error={ \"code\": -32601, \"message\": \"method not supported: debug_traceTransaction\" }, payload={"
+    },
+    "proof": "capture() on an OPEN (never-attested) receipt reverts; receipt status 0 on-chain, payment state unchanged (still OPEN)",
+    "revertReason": "not ATTESTED",
+    "revertReasonMethod": "decoded from 0x08c379a0 payload via read-only eth_call replay of the exact inner capture(bytes32) calldata against the EURC escrow while pid3 was still OPEN (debug_traceTransaction unsupported on this RPC: -32601)"
+  },
+  "txs": [
+    {
+      "label": "t1-approve",
+      "kind": "approve",
+      "hash": "0x0ed5c1bc84d8779eb80e78251af301e895b165c450d06002277cbebe5f207a8b",
+      "explorer": "https://explorer.arc.io/tx/0x0ed5c1bc84d8779eb80e78251af301e895b165c450d06002277cbebe5f207a8b",
+      "blockNumber": "25970883",
+      "nonce": 131,
+      "gasUsed": "79770",
+      "costWei": "1595400083040570",
+      "status": "success",
+      "proof": "approve(escrow, 0.01 EURC): deployer allows the EURC escrow to pull principal"
+    },
+    {
+      "label": "t1-authorize",
+      "kind": "authorize",
+      "hash": "0x068c97c13f9e3aeda3516fccaa09ab1ccc816e684d130d927f0ec17fe820ffe0",
+      "explorer": "https://explorer.arc.io/tx/0x068c97c13f9e3aeda3516fccaa09ab1ccc816e684d130d927f0ec17fe820ffe0",
+      "blockNumber": "25970890",
+      "nonce": 132,
+      "gasUsed": "232875",
+      "costWei": "4657500242422875",
+      "status": "success",
+      "proof": "authorize(pid1, 0.01 EURC): escrow pulls 0.01 EURC from buyer via transferFrom; receipt -> OPEN"
+    },
+    {
+      "label": "t1-attest",
+      "kind": "attestDelivery",
+      "hash": "0x32adffa8925aed921878bec6728b6faacb16d97d5ed4c9d3b0b677e6b5ba2e99",
+      "explorer": "https://explorer.arc.io/tx/0x32adffa8925aed921878bec6728b6faacb16d97d5ed4c9d3b0b677e6b5ba2e99",
+      "blockNumber": "25970896",
+      "nonce": 133,
+      "gasUsed": "104470",
+      "costWei": "2089400108753270",
+      "status": "success",
+      "proof": "attestDelivery(pid1, keccak256(\"e2e-eurc-happy\")): seller attests; receipt -> ATTESTED, 300s challenge window opens"
+    },
+    {
+      "label": "t1-capture",
+      "kind": "capture",
+      "hash": "0x9818c1396b95ea60cbbc9e18ba138018133120fcdbc99ce477156eaa77ca323a",
+      "explorer": "https://explorer.arc.io/tx/0x9818c1396b95ea60cbbc9e18ba138018133120fcdbc99ce477156eaa77ca323a",
+      "blockNumber": "25971497",
+      "nonce": 134,
+      "gasUsed": "81209",
+      "costWei": "1624180084538569",
+      "status": "success",
+      "proof": "capture(pid1) after 300s window: permissionless finalize; 0.01 EURC paid to seller (=deployer); receipt -> CAPTURED"
+    },
+    {
+      "label": "t2-approve",
+      "kind": "approve",
+      "hash": "0x46c21de812f81e491bdffbb4199bc96a902c94e54f4c78f8f630ab0c19c3863d",
+      "explorer": "https://explorer.arc.io/tx/0x46c21de812f81e491bdffbb4199bc96a902c94e54f4c78f8f630ab0c19c3863d",
+      "blockNumber": "25971504",
+      "nonce": 135,
+      "gasUsed": "79770",
+      "costWei": "1595400083040570",
+      "status": "success",
+      "proof": "approve(escrow, 0.01 EURC): allowance for the void-path receipt"
+    },
+    {
+      "label": "t2-authorize",
+      "kind": "authorize",
+      "hash": "0x3339a97d582c72a502beabeef73459796e5277e46ed0797d35ef446b4d6c25b2",
+      "explorer": "https://explorer.arc.io/tx/0x3339a97d582c72a502beabeef73459796e5277e46ed0797d35ef446b4d6c25b2",
+      "blockNumber": "25971510",
+      "nonce": 136,
+      "gasUsed": "232863",
+      "costWei": "4657260242410383",
+      "status": "success",
+      "proof": "authorize(pid2, 0.01 EURC): receipt -> OPEN"
+    },
+    {
+      "label": "t2-attest",
+      "kind": "attestDelivery",
+      "hash": "0x81678dac6cd8977e79679bf34a430c42038d81a7411dbffa20edb6e7c33c619c",
+      "explorer": "https://explorer.arc.io/tx/0x81678dac6cd8977e79679bf34a430c42038d81a7411dbffa20edb6e7c33c619c",
+      "blockNumber": "25971517",
+      "nonce": 137,
+      "gasUsed": "104458",
+      "costWei": "2089160108740778",
+      "status": "success",
+      "proof": "attestDelivery(pid2): receipt -> ATTESTED (so the buyer can dispute inside the window)"
+    },
+    {
+      "label": "t2-flag",
+      "kind": "flagNonDelivery",
+      "hash": "0x143267ec5aa5e4d7dc03c5534f94259ca62be6ff434438113b91e53bfeb61808",
+      "explorer": "https://explorer.arc.io/tx/0x143267ec5aa5e4d7dc03c5534f94259ca62be6ff434438113b91e53bfeb61808",
+      "blockNumber": "25971524",
+      "nonce": 138,
+      "gasUsed": "82259",
+      "costWei": "1645180085631619",
+      "status": "success",
+      "proof": "flagNonDelivery(pid2, keccak256(\"e2e test\")): buyer disputes inside challenge window; receipt -> FLAGGED"
+    },
+    {
+      "label": "t2-void",
+      "kind": "void",
+      "hash": "0x65130f8b1b3ee19f1820c2464dcb850c91914a66cc22d68aabd760b777f04464",
+      "explorer": "https://explorer.arc.io/tx/0x65130f8b1b3ee19f1820c2464dcb850c91914a66cc22d68aabd760b777f04464",
+      "blockNumber": "25971531",
+      "nonce": 139,
+      "gasUsed": "79213",
+      "costWei": "1584260082460733",
+      "status": "success",
+      "proof": "void(pid2): permissionless void of flagged receipt; full 0.01 EURC refund to buyer; receipt -> VOIDED"
+    },
+    {
+      "label": "t3-approve",
+      "kind": "approve",
+      "hash": "0x97d9b42d14378404297bd929f4fa0909b867603ee3ff70086d545f8069d91399",
+      "explorer": "https://explorer.arc.io/tx/0x97d9b42d14378404297bd929f4fa0909b867603ee3ff70086d545f8069d91399",
+      "blockNumber": "25971538",
+      "nonce": 140,
+      "gasUsed": "79770",
+      "costWei": "1595400083040570",
+      "status": "success",
+      "proof": "approve(escrow, 0.01 EURC): allowance for the failure-path receipt"
+    },
+    {
+      "label": "t3-authorize",
+      "kind": "authorize",
+      "hash": "0xee9ddfe6102f51cc3be2483f611695edf83ad366a9c3cb7e5e04d4b855176f8a",
+      "explorer": "https://explorer.arc.io/tx/0xee9ddfe6102f51cc3be2483f611695edf83ad366a9c3cb7e5e04d4b855176f8a",
+      "blockNumber": "25971544",
+      "nonce": 141,
+      "gasUsed": "232875",
+      "costWei": "4657500242422875",
+      "status": "success",
+      "proof": "authorize(pid3, 0.01 EURC): receipt -> OPEN (never attested \u2014 capture must fail)"
+    },
+    {
+      "label": "t3-capture-FAIL",
+      "kind": "capture",
+      "hash": "0x35713984327c26d5149f5129c924c96879563ef302836374ccf9b7e10cb1096e",
+      "explorer": "https://explorer.arc.io/tx/0x35713984327c26d5149f5129c924c96879563ef302836374ccf9b7e10cb1096e",
+      "blockNumber": "25971551",
+      "nonce": 142,
+      "gasUsed": "43242",
+      "costWei": "864840045014922",
+      "status": "reverted",
+      "proof": "INTENTIONAL FAILURE: capture(pid3) on OPEN (never attested) receipt \u2014 MUST revert with \"not ATTESTED\" (receipt status 0)"
+    },
+    {
+      "label": "t3-recover-attest",
+      "kind": "attestDelivery",
+      "hash": "0x58c9102a6b9f6fc85ffa8552530d522087de21d40343fe673b60b1430afeefa1",
+      "explorer": "https://explorer.arc.io/tx/0x58c9102a6b9f6fc85ffa8552530d522087de21d40343fe673b60b1430afeefa1",
+      "blockNumber": "25971558",
+      "nonce": 143,
+      "gasUsed": "104470",
+      "costWei": "2089400108753270",
+      "status": "success",
+      "proof": "recovery: attestDelivery(pid3) so the dust can be flagged+voided"
+    },
+    {
+      "label": "t3-recover-flag",
+      "kind": "flagNonDelivery",
+      "hash": "0x4d4f94e2efb83848e027d63d12377085a673b49fb7fcff71141aaa2eee19be8c",
+      "explorer": "https://explorer.arc.io/tx/0x4d4f94e2efb83848e027d63d12377085a673b49fb7fcff71141aaa2eee19be8c",
+      "blockNumber": "25971565",
+      "nonce": 144,
+      "gasUsed": "82271",
+      "costWei": "1645420085644111",
+      "status": "success",
+      "proof": "recovery: flagNonDelivery(pid3); receipt -> FLAGGED"
+    },
+    {
+      "label": "t3-recover-void",
+      "kind": "void",
+      "hash": "0x65de00044f86e946b034fd006c8ab127ec3b865e11df812a4d4cddd9ba072d6c",
+      "explorer": "https://explorer.arc.io/tx/0x65de00044f86e946b034fd006c8ab127ec3b865e11df812a4d4cddd9ba072d6c",
+      "blockNumber": "25971572",
+      "nonce": 145,
+      "gasUsed": "79225",
+      "costWei": "1584500082473225",
+      "status": "success",
+      "proof": "recovery: void(pid3); 0.01 EURC dust refunded to buyer; receipt -> VOIDED"
+    }
+  ],
+  "gas": {
+    "totalGasUsed": "1698740",
+    "totalCostWei": "33974801768388340",
+    "totalCostUSDC": "0.033975",
+    "note": "Arc gas is 18-decimal USDC; totalCostWei / 1e18"
+  },
+  "balances": {
+    "eurcBefore": "462129",
+    "eurcBeforeDisplay": "0.462129",
+    "eurcAfter": "462129",
+    "eurcAfterDisplay": "0.462129",
+    "eurcDeltaDisplay": "0.000000",
+    "note": "principal net ~0: deployer is buyer AND seller, and all dust was refunded/voided"
+  },
+  "completedAt": "2026-10-14T19:26:06.352Z"
+}

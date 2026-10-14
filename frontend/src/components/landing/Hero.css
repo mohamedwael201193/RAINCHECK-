@@ -1,0 +1,368 @@
+/* RAINCHECK hero — DESIGN STANDARD (Phase A).
+   Tokens (§9): bg #0B1220 · accent #35E0FF · paper #F4EFE6 · text-on-dark #F4FEFF.
+   NO serif anywhere. Accent touches exactly ONE hero word.
+   Animation (§5): transform + opacity only; marquee + one ambient loop. */
+
+.rc-hero {
+  --rc-bg: #0b1220;
+  --rc-accent: #35e0ff;
+  --rc-paper: #f4efe6;
+  --rc-ondark: #f4feff;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--rc-bg);
+  color: var(--rc-ondark);
+  overflow: hidden;
+  isolation: isolate;
+  padding-top: 72px; /* clears the fixed nav */
+}
+
+/* film grain — near-zero risk texture, encouraged (§4) */
+.rc-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- 1 · brand mark ---------- */
+.rc-brandmark {
+  position: relative;
+  z-index: 2;
+  padding: 28px clamp(20px, 4.5vw, 64px) 8px;
+}
+
+.rc-brandmark-img {
+  display: block;
+  height: 34px;
+  width: auto;
+}
+
+/* ---------- 2 · ambient visual (melts into bg — no card, no border, no shadow) ---------- */
+.rc-ambient {
+  position: relative;
+  z-index: 1;
+  margin: 12px auto 0;
+  width: min(1060px, 92vw);
+  display: flex;
+  justify-content: center;
+}
+
+.rc-hero-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 46vh;
+  object-fit: contain;
+  /* melt test: edge pixels of /hero.png are #0B1220 — no mask, no frame */
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  will-change: transform;
+}
+
+.rc-ambient-float {
+  animation: rc-float 7s ease-in-out infinite;
+}
+
+@keyframes rc-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* CSS fallback — line-art on #0B1220, melts like the image */
+.rc-melt-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rc-bg);
+}
+
+/* ---------- 3 · signature marquee ticker (full-bleed) ---------- */
+.rc-marquee {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin-top: 26px;
+  border-top: 1px solid rgba(244, 254, 255, 0.12);
+  border-bottom: 1px solid rgba(244, 254, 255, 0.12);
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 14px 0;
+}
+
+.rc-marquee:hover .rc-marquee-track {
+  animation-play-state: paused;
+}
+
+.rc-marquee-track {
+  display: inline-flex;
+  will-change: transform;
+  animation: rc-marquee 24s linear infinite;
+}
+
+.rc-marquee-chunk {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rc-accent);
+  padding-right: 0.4em;
+}
+
+.rc-marquee-chunk b {
+  padding: 0 1.1em;
+  font-weight: 400;
+  color: rgba(244, 254, 255, 0.35);
+}
+
+@keyframes rc-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- 4 · headline + subline + CTA row ---------- */
+.rc-hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(44px, 7vh, 88px) clamp(20px, 4.5vw, 64px)
+    clamp(56px, 8vh, 110px);
+}
+
+.rc-title {
+  margin: 0 0 26px;
+  font-family: "Archivo Black", "Inter Tight", Inter, system-ui, -apple-system,
+    "Segoe UI";
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+  font-size: clamp(4rem, 11vw, 7.5rem); /* ≥64px desktop, up to ~120px */
+  color: var(--rc-ondark);
+}
+
+.rc-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em; /* descender room inside the mask */
+}
+
+.rc-word {
+  display: inline-block;
+  opacity: 0;
+  animation: rc-word-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+.rc-word-accent {
+  color: var(--rc-accent);
+}
+
+@keyframes rc-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.38em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rc-sub {
+  margin: 0 0 40px;
+  max-width: 60ch;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.6;
+  font-weight: 500;
+  color: rgba(244, 254, 255, 0.78);
+}
+
+.rc-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.rc-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  font-weight: 800;
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
+  padding: 16px 34px;
+  border-radius: 100px; /* §6 shimmer-button radius */
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 0.22s ease, background-color 0.22s ease,
+    color 0.22s ease, border-color 0.22s ease;
+}
+
+/* exactly ONE primary per screen (§6, §10) */
+.rc-btn-primary {
+  background: var(--rc-accent);
+  color: var(--rc-bg);
+}
+
+.rc-btn-primary:hover {
+  transform: translateY(-2px);
+  background: #6ff0ff;
+}
+
+.rc-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* sheen sweep — transform-only, overflow-masked */
+.rc-sheen {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -30%;
+  width: 36%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  animation: rc-sheen 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes rc-sheen {
+  0%,
+  55% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  90%,
+  100% {
+    transform: translateX(420%) skewX(-18deg);
+  }
+}
+
+.rc-btn-label,
+.rc-arrow {
+  position: relative;
+  z-index: 1;
+}
+
+.rc-arrow {
+  transition: transform 0.22s ease;
+}
+
+.rc-btn-primary:hover .rc-arrow {
+  transform: translateX(4px);
+}
+
+.rc-btn-ghost {
+  color: var(--rc-ondark);
+  border: 1.5px solid rgba(244, 254, 255, 0.38);
+  background: transparent;
+}
+
+.rc-btn-ghost:hover {
+  border-color: var(--rc-accent);
+  color: var(--rc-accent);
+  transform: translateY(-2px);
+}
+
+/* ---------- generic entrance (opacity + translateY only, §5) ---------- */
+.rc-anim {
+  opacity: 0;
+  animation: rc-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 640px) {
+  /* §8: visual below headline on mobile */
+  .rc-ambient {
+    order: 4;
+    width: 94vw;
+    margin-top: 8px;
+  }
+
+  .rc-marquee {
+    order: 5;
+  }
+
+  .rc-hero-inner {
+    order: 2;
+  }
+
+  .rc-brandmark {
+    order: 1;
+  }
+
+  .rc-title {
+    font-size: clamp(3.4rem, 17vw, 4.6rem);
+  }
+
+  .rc-ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rc-btn {
+    justify-content: center;
+    min-height: 56px; /* ≥44px tap target */
+  }
+
+  .rc-hero-img {
+    max-height: 34vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-word,
+  .rc-anim {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .rc-ambient-float,
+  .rc-marquee-track,
+  .rc-sheen {
+    animation: none !important;
+  }
+
+  .rc-sheen {
+    display: none;
+  }
+}

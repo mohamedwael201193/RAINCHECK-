@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "algorithm": "receiptHash = lowercase-hex(SHA-256(JCS(receipt))); JCS = RFC 8785 subset in frontend/src/lib/jcs.ts, byte-identical to backend/src/api/jcs.ts; SHA-256 of the UTF-8 JCS bytes.",
+    "label": "SHARED GOLDEN TEST VECTOR (fixture) — frontend F10 / backend B3",
+    "preimages": {
+      "reasonHash": "keccak256('garbage delivery: paid call returned HTTP 400, output bytes are random')  [bible §6.2 documented reason string]",
+      "termsHash": "keccak256('raincheck-golden-vector:w1c-terms')"
+    },
+    "provenance": "paymentId, paymentProof (settleTx, payer), delivery.nonDelivery.flaggedBy, status and anchors are REAL Arc-mainnet (5042) values from the R9-W1C void path (bible §6.2, 2026-10-14). termsHash and delivery.nonDelivery.reasonHash are keccak256 of the documented preimages below (fixture-defined). terms.deadline / delivery attestation fields are the bible §4.6 schema-example constants (fixture-defined).",
+    "syncRule": "If backend/src/api/jcs.ts changes, this vector MUST be regenerated and re-pinned here; the receiptHash test fails otherwise. Same in reverse."
+  },
+  "expectedJcs": "{\"anchors\":[\"eip155:5042:0xa5c889b7c7a6cffb11e30855e397f3109eac0a540da90b365355f91a33e1f978\",\"eip155:5042:0xc496c6a04218174019a343f9a19d5b424c7bd38f0b8e1bde7b8021aadc817383\",\"eip155:5042:0x579592846ee7a558e2bede22e5fadf82bd27210c81b741a254dc59b93364881e\",\"eip155:5042:0xf8ecf05d35d2c9b18675d48274877d4e569e6b72908bb2aad31ad8769b4fd60c\"],\"delivery\":{\"nonDelivery\":{\"flaggedBy\":\"0xBDfCeE82Bd42FEfA58ee850B3709636a8B6b0034\",\"reasonHash\":\"0xacd9018996d297a1b1a629191e030b047d844721a602138b59acb7e52d87ad8f\"}},\"funding\":null,\"oracle\":null,\"paymentId\":\"0x9b56d7caaeb6a25e77760afb249a9ce69d176c47802b283c7127b0940ef653b9\",\"paymentProof\":{\"amount\":\"1000\",\"authorizationState\":true,\"payer\":\"0xBDfCeE82Bd42FEfA58ee850B3709636a8B6b0034\",\"settleTx\":\"0xa5c889b7c7a6cffb11e30855e397f3109eac0a540da90b365355f91a33e1f978\"},\"policy\":null,\"specVersion\":\"raincheck-receipt/v1\",\"status\":\"VOIDED\",\"terms\":{\"deadline\":1791957337,\"endpoint\":null,\"price\":\"1000\",\"termsHash\":\"0x6c4f747fb675df1fffa180453a587d7c54a9172d2b920a1f36c06d4d2b5f12fd\"}}",
+  "expectedReceiptHash": "00328dc30715398228db640a07b84877b1077c7108c2a1645a49999a0d436d37",
+  "receipt": {
+    "anchors": [
+      "eip155:5042:0xa5c889b7c7a6cffb11e30855e397f3109eac0a540da90b365355f91a33e1f978",
+      "eip155:5042:0xc496c6a04218174019a343f9a19d5b424c7bd38f0b8e1bde7b8021aadc817383",
+      "eip155:5042:0x579592846ee7a558e2bede22e5fadf82bd27210c81b741a254dc59b93364881e",
+      "eip155:5042:0xf8ecf05d35d2c9b18675d48274877d4e569e6b72908bb2aad31ad8769b4fd60c"
+    ],
+    "delivery": {
+      "nonDelivery": {
+        "flaggedBy": "0xBDfCeE82Bd42FEfA58ee850B3709636a8B6b0034",
+        "reasonHash": "0xacd9018996d297a1b1a629191e030b047d844721a602138b59acb7e52d87ad8f"
+      }
+    },
+    "funding": null,
+    "oracle": null,
+    "paymentId": "0x9b56d7caaeb6a25e77760afb249a9ce69d176c47802b283c7127b0940ef653b9",
+    "paymentProof": {
+      "amount": "1000",
+      "authorizationState": true,
+      "payer": "0xBDfCeE82Bd42FEfA58ee850B3709636a8B6b0034",
+      "settleTx": "0xa5c889b7c7a6cffb11e30855e397f3109eac0a540da90b365355f91a33e1f978"
+    },
+    "policy": null,
+    "specVersion": "raincheck-receipt/v1",
+    "status": "VOIDED",
+    "terms": {
+      "deadline": 1791957337,
+      "endpoint": null,
+      "price": "1000",
+      "termsHash": "0x6c4f747fb675df1fffa180453a587d7c54a9172d2b920a1f36c06d4d2b5f12fd"
+    }
+  }
+}

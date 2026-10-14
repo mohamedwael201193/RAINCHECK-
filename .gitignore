@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+out/
+frontend/dist/
+backend/dist/
+
+# caches
+cache/
+contracts/cache/
+
+# test coverage
+coverage/
+
+# logs
+*.log
+
+# local environment files (real secrets live here — never commit)
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# NOTE: contracts/deployments/*.json is intentionally NOT ignored —
+# the deployment record must be committed.

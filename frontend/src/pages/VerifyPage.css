@@ -1,0 +1,313 @@
+/* F7 — Verify page. Design law §9 tokens: bg #0B1220 / accent #35E0FF /
+   paper #F4EFE6 / text-on-dark #F4FEFF. MISMATCH uses a warm red (not accent).
+   Dashboard = contained max-width, never full-bleed. */
+
+.rc-verify {
+  --rc-ink: #0b1220;
+  --rc-accent: #35e0ff;
+  --rc-paper: #f4efe6;
+  --rc-ice: #f4feff;
+  --rc-danger: #f87171;
+  --rc-line: rgba(244, 254, 255, 0.12);
+  --rc-panel: #0e1728;
+  --rc-muted: rgba(244, 254, 255, 0.62);
+
+  background: var(--rc-ink);
+  color: var(--rc-ice);
+  min-height: 100svh;
+  font-family: Inter, system-ui, -apple-system;
+  -webkit-font-smoothing: antialiased;
+}
+
+.rc-verify-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 20px 90px;
+}
+
+.rc-back {
+  display: inline-block;
+  margin-bottom: 22px;
+  color: var(--rc-accent);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+.rc-back:hover { text-decoration: underline; }
+
+.rc-verify-head { margin-bottom: 28px; }
+
+.rc-display {
+  font-family: "Archivo Black", Inter, system-ui;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  font-size: clamp(48px, 8vw, 84px);
+  margin: 0 0 16px;
+}
+.rc-display-accent { color: var(--rc-accent); }
+
+.rc-subline {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--rc-muted);
+  max-width: 60ch;
+  margin: 0;
+}
+
+.rc-panel {
+  background: var(--rc-panel);
+  border: 1px solid var(--rc-line);
+  border-radius: 14px;
+  padding: 26px;
+  margin-bottom: 22px;
+}
+
+.rc-field { margin-bottom: 20px; }
+.rc-field:last-of-type { margin-bottom: 8px; }
+
+.rc-field label {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.rc-hint {
+  font-size: 13.5px;
+  color: var(--rc-muted);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.rc-textarea,
+.rc-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0a1120;
+  border: 1px solid var(--rc-line);
+  border-radius: 10px;
+  color: var(--rc-ice);
+  font-size: 14px;
+  padding: 12px 14px;
+  line-height: 1.55;
+}
+.rc-textarea { resize: vertical; min-height: 180px; }
+.rc-mono { font-family: ui-monospace, "JetBrains Mono", monospace; }
+.rc-textarea:focus,
+.rc-input:focus {
+  outline: none;
+  border-color: var(--rc-accent);
+}
+
+.rc-field-error {
+  color: var(--rc-danger);
+  font-size: 13.5px;
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+
+.rc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+/* One primary action per screen (standard §7.1). Solid accent, no shimmer
+   outside the landing hero. */
+.rc-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--rc-accent);
+  color: #06222b;
+  font-weight: 800;
+  font-size: 15px;
+  border: none;
+  border-radius: 100px;
+  padding: 13px 26px;
+  cursor: pointer;
+  min-height: 48px;
+}
+.rc-primary:disabled { opacity: 0.65; cursor: wait; }
+.rc-primary:not(:disabled):hover { filter: brightness(1.08); }
+
+.rc-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  color: var(--rc-ice);
+  font-weight: 600;
+  font-size: 15px;
+  border: 1px solid var(--rc-line);
+  border-radius: 100px;
+  padding: 13px 22px;
+  cursor: pointer;
+  min-height: 48px;
+}
+.rc-ghost:disabled { opacity: 0.6; cursor: wait; }
+.rc-ghost:not(:disabled):hover { border-color: var(--rc-accent); }
+
+/* Spinner lives INSIDE the clicked button (standard §6) — no page spinners. */
+.rc-spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(6, 34, 43, 0.3);
+  border-top-color: currentColor;
+  animation: rc-spin 0.8s linear infinite;
+}
+@keyframes rc-spin { to { transform: rotate(360deg); } }
+
+.rc-fatal {
+  margin: 16px 0 0;
+  background: rgba(248, 113, 113, 0.09);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #fecaca;
+}
+
+/* Skeleton regions while the RPC read is in flight — never blank space,
+   never invented rows. Shimmer is opacity-only friendly (no layout cost). */
+.rc-skel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(244, 254, 255, 0.07);
+}
+.rc-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(244, 254, 255, 0.12), transparent);
+  background-size: 400px 100%;
+  animation: rc-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes rc-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.rc-skel-banner { height: 96px; margin-bottom: 18px; }
+.rc-skel-line { height: 16px; margin-bottom: 12px; }
+
+.rc-verdict {
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 24px;
+  border: 1px solid;
+}
+.rc-verdict.is-match {
+  border-color: rgba(53, 224, 255, 0.55);
+  background: rgba(53, 224, 255, 0.08);
+}
+.rc-verdict.is-mismatch {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(248, 113, 113, 0.08);
+}
+.rc-verdict-word {
+  font-family: "Archivo Black", Inter, system-ui;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+.is-match .rc-verdict-word { color: var(--rc-accent); }
+.is-mismatch .rc-verdict-word { color: var(--rc-danger); }
+.rc-verdict-line { margin: 0; font-size: 15px; line-height: 1.55; color: var(--rc-ice); }
+
+.rc-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rc-muted);
+  margin: 26px 0 12px;
+}
+
+.rc-checks { list-style: none; margin: 0; padding: 0; }
+.rc-check {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rc-line);
+}
+.rc-check-mark {
+  flex: 0 0 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+.is-pass .rc-check-mark { background: rgba(53, 224, 255, 0.14); color: var(--rc-accent); }
+.is-fail .rc-check-mark { background: rgba(248, 113, 113, 0.14); color: var(--rc-danger); }
+.rc-check-label { font-weight: 700; font-size: 14.5px; }
+.rc-check-detail { font-size: 13.5px; color: var(--rc-muted); line-height: 1.55; margin-top: 2px; }
+
+.rc-values { margin: 0; }
+.rc-value-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rc-line);
+  font-size: 14px;
+}
+.rc-value-row dt { color: var(--rc-muted); font-weight: 600; }
+.rc-value-row dd { margin: 0; line-height: 1.7; word-break: break-all; }
+
+/* Hashes and technical values are copyable code — never headings (§7.8). */
+.rc-code {
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  background: rgba(244, 254, 255, 0.07);
+  border: 1px solid var(--rc-line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  word-break: break-all;
+}
+.rc-code-wrap { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rc-copy {
+  background: transparent;
+  border: 1px solid var(--rc-line);
+  color: var(--rc-muted);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.rc-copy:hover { color: var(--rc-accent); border-color: var(--rc-accent); }
+
+.rc-link { color: var(--rc-accent); font-size: 13.5px; text-decoration: none; font-weight: 600; }
+.rc-link:hover { text-decoration: underline; }
+.rc-muted { color: var(--rc-muted); font-size: 13.5px; }
+
+.rc-fineprint {
+  font-size: 12.5px;
+  color: var(--rc-muted);
+  margin: 22px 0 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .rc-panel { padding: 20px 16px; }
+  .rc-value-row { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* Reduced motion is non-negotiable (standard §5): decorative loops stop,
+   everything renders in its final state. */
+@media (prefers-reduced-motion: reduce) {
+  .rc-skel::after,
+  .rc-spinner { animation: none; }
+  .rc-skel::after { background: rgba(244, 254, 255, 0.08); }
+}

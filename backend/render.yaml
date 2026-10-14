@@ -1,0 +1,32 @@
+# Render blueprint for the RAINCHECK receipt API (backend/).
+# Apply from the repo root: `render blueprint apply` or import via the dashboard.
+#
+# NOTE: The backend's SQLite indexer cache lives on the filesystem, so the
+# service mounts a persistent disk at /data and RAINCHECK_DB_PATH points there.
+# Render disks are NOT available on the free tier — use a paid instance type
+# or the DB will reset on every redeploy/restart.
+
+services:
+  - type: web
+    name: raincheck-api
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: RPC_URL
+        value: https://rpc.mainnet.arc.io
+      - key: ESCROW_ADDRESS
+        value: 0x97f233865ae84DC7475F6D7CA404930654580CB5
+      - key: ESCROW_DEPLOY_BLOCK
+        value: 25956323
+      - key: RAINCHECK_DB_PATH
+        value: /data/raincheck-index.db
+      - key: WEBHOOK_SECRET
+        sync: false   # set manually in the Render dashboard; never commit a value
+    disk:
+      name: raincheck-data
+      mountPath: /data
+      sizeGB: 1

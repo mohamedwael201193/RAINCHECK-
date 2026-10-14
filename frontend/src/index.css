@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * RAINCHECK design tokens — ~/workspace/your_files/design-standard.md §9 is the source of truth.
+ * Identity: ink navy #0B1220, warm paper #F4EFE6, rain cyan #35E0FF.
+ * Text on dark #F4FEFF, text on paper #0B1220. Accent is EARNED: CTAs,
+ * one hero word, ticker, status markers — never body text, never washes.
+ * NO purple/blue gradients. Bold type, intentional whitespace.
+ * Fonts loaded via Google Fonts <link> in index.html (Archivo Black + Inter).
+ */
+:root {
+  --font-display: "Archivo Black", "Inter", system-ui;
+  --font-sans: "Inter", system-ui;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+::selection {
+  background: #35e0ff;
+  color: #0b1220;
+}
+
+/* Visible focus for keyboard users — rain-cyan ring. */
+:focus-visible {
+  outline: 2px solid #35e0ff;
+  outline-offset: 2px;
+}
+
+@keyframes rc-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@layer components {
+  /* Loading skeletons — never blank space while data loads.
+     Bible §8.2: loading states are skeletons, not blank space. */
+  .rc-skel {
+    @apply relative overflow-hidden rounded-md bg-[#E3DAC4];
+  }
+  .rc-skel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(244, 239, 230, 0.7),
+      transparent
+    );
+    background-size: 400px 100%;
+    animation: rc-shimmer 1.4s ease-in-out infinite;
+  }
+  .rc-skel-on-ink {
+    @apply bg-[#16273F];
+  }
+  .rc-skel-on-ink::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(11, 18, 32, 0.55),
+      transparent
+    );
+    background-size: 400px 100%;
+  }
+
+  /* Honest button primitives. Bible §8.2: an enabled button always executes;
+     a disabled one always carries its reason + next action beside it.
+     Standard §6: exactly one primary per screen; primary = rain cyan. */
+  .rc-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3
+      text-sm font-bold tracking-wide transition-colors cursor-pointer
+      disabled:cursor-not-allowed select-none;
+  }
+  .rc-btn-primary {
+    @apply rc-btn bg-rain text-ink hover:bg-[#1FC2F2] disabled:bg-ink/15
+      disabled:text-ink/40 disabled:hover:bg-ink/15;
+  }
+  .rc-btn-ink {
+    @apply rc-btn bg-ink text-ice hover:bg-ink/85 disabled:bg-ink/15
+      disabled:text-ink/40;
+  }
+  .rc-btn-outline {
+    @apply rc-btn border-2 border-ink text-ink hover:bg-ink hover:text-ice
+      disabled:border-ink/25 disabled:text-ink/35 disabled:hover:bg-transparent
+      disabled:hover:text-ink/35;
+  }
+  .rc-btn-outline-ice {
+    @apply rc-btn border-2 border-ice text-ice hover:bg-ice hover:text-ink
+      disabled:border-ice/30 disabled:text-ice/40 disabled:hover:bg-transparent
+      disabled:hover:text-ice/40;
+  }
+
+  /* Monospace hash chip — always paired with an explorer link, never bare. */
+  .rc-hash {
+    @apply inline-flex items-center gap-1.5 font-mono text-[13px] break-all;
+  }
+}
+
+/* Reduced motion is NON-NEGOTIABLE (standard §5): decorative loops stop,
+   reveals render in final state. */
+@media (prefers-reduced-motion: reduce) {
+  .rc-skel::after,
+  .rc-skel-on-ink::after {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

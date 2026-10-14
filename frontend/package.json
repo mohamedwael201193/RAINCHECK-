@@ -1,0 +1,37 @@
+{
+  "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "@noble/hashes": "^1.8.0",
+    "@privy-io/react-auth": "^3.10.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-hook-form": "^7.90.0",
+    "react-router-dom": "^6",
+    "sonner": "^2.0.8",
+    "viem": "^2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4",
+    "autoprefixer": "^10",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.9.3",
+    "vite": "^6",
+    "vitest": "^2"
+  },
+  "name": "frontend",
+  "private": true,
+  "scripts": {
+    "build": "tsc -b && vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "type": "module",
+  "version": "0.1.0"
+}

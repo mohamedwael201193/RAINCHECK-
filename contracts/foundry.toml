@@ -1,0 +1,12 @@
+# RAINCHECK contracts — production build
+# solc 0.8.24, optimizer OFF. These settings are part of the Sourcify
+# exact_match profile; do not change them without redeploy + reverify.
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.24"
+optimizer = false
+remappings = [
+    "@openzeppelin/=lib/openzeppelin-contracts/"
+]

@@ -1,0 +1,256 @@
+{
+  "txs": [
+    {
+      "label": "approve 0.02 USDC -> escrow",
+      "kind": "approve",
+      "hash": "0x040de3f360487e13c6de2531c20d3561f90c2ebf574ccd0ab0d1c04c1bc16168",
+      "explorer": "https://explorer.arc.io/tx/0x040de3f360487e13c6de2531c20d3561f90c2ebf574ccd0ab0d1c04c1bc16168",
+      "blockNumber": "25961198",
+      "gasUsed": "79543",
+      "costWei": "1590860091713079",
+      "memoId": "0x3cd670a4e464009e463fb12feb65000fdb3c797fae4a4cf5b51f725d35452000"
+    },
+    {
+      "label": "A: authorize 0.01 USDC",
+      "kind": "authorize",
+      "hash": "0x0697041f9d71e2b80d78c308a634c49431ddc454dc1cb04326b7245cae152ac3",
+      "explorer": "https://explorer.arc.io/tx/0x0697041f9d71e2b80d78c308a634c49431ddc454dc1cb04326b7245cae152ac3",
+      "blockNumber": "25961208",
+      "gasUsed": "222309",
+      "costWei": "4446180256322277",
+      "memoId": "0x06aadc9472b9455209178bf9b2051a05216ac6add4900c7eea8be19753784e79"
+    },
+    {
+      "label": "A: attestDelivery",
+      "kind": "attestDelivery",
+      "hash": "0x0d2c0f7da5c6288c508e8af729f9454f145f0e7fb8c1ef070f266382e22c5f04",
+      "explorer": "https://explorer.arc.io/tx/0x0d2c0f7da5c6288c508e8af729f9454f145f0e7fb8c1ef070f266382e22c5f04",
+      "blockNumber": "25961218",
+      "gasUsed": "104470",
+      "costWei": "2089400120453910",
+      "memoId": "0x0aed51784bc98f8bc1985b7bfd4bd108218a48f551571286fec7964fc065a13c"
+    },
+    {
+      "label": "A: capture",
+      "kind": "capture",
+      "hash": "0xd59f0d320acf596ef5a15a1109aae7ed70050d6e816b626f68ae25685d9b3b22",
+      "explorer": "https://explorer.arc.io/tx/0xd59f0d320acf596ef5a15a1109aae7ed70050d6e816b626f68ae25685d9b3b22",
+      "blockNumber": "25961876",
+      "gasUsed": "87400",
+      "costWei": "1748000100772200",
+      "memoId": "0x29d2dd617e081fa8172d993e01b4de69497c28c0027f2d969d304f015df9f6e0"
+    },
+    {
+      "label": "B: authorize 0.01 USDC",
+      "kind": "authorize",
+      "hash": "0x1837d7cb39959fe7517b5432dc2991cb70c537ea7a32f14a596973724775c7ad",
+      "explorer": "https://explorer.arc.io/tx/0x1837d7cb39959fe7517b5432dc2991cb70c537ea7a32f14a596973724775c7ad",
+      "blockNumber": "25961968",
+      "gasUsed": "217497",
+      "costWei": "4349940250774041",
+      "memoId": "0x06aadc9472b9455209178bf9b2051a05216ac6add4900c7eea8be19753784e79"
+    },
+    {
+      "label": "B: attestDelivery",
+      "kind": "attestDelivery",
+      "hash": "0x54aae49af79ca741ec30bbf508359e6497127642fa4446912c881713cd355bfb",
+      "explorer": "https://explorer.arc.io/tx/0x54aae49af79ca741ec30bbf508359e6497127642fa4446912c881713cd355bfb",
+      "blockNumber": "25961978",
+      "gasUsed": "104458",
+      "costWei": "2089160120440074",
+      "memoId": "0x0aed51784bc98f8bc1985b7bfd4bd108218a48f551571286fec7964fc065a13c"
+    },
+    {
+      "label": "B: flagNonDelivery",
+      "kind": "flagNonDelivery",
+      "hash": "0x05855d92db957d892288ee743aeb47d4fc70478fbdb7cd5931604247a8715c22",
+      "explorer": "https://explorer.arc.io/tx/0x05855d92db957d892288ee743aeb47d4fc70478fbdb7cd5931604247a8715c22",
+      "blockNumber": "25961988",
+      "gasUsed": "82259",
+      "costWei": "1645180094844627",
+      "memoId": "0x8f83aec0545703ab5e8efb14fd2ec6fa2ccde5c23a3f28b050abb4d6ff768b22"
+    },
+    {
+      "label": "B: void",
+      "kind": "void",
+      "hash": "0x1223f1a53aa3424c2ccd4dc207f1b85a2c5fef86edabbabec436b3d8468b8324",
+      "explorer": "https://explorer.arc.io/tx/0x1223f1a53aa3424c2ccd4dc207f1b85a2c5fef86edabbabec436b3d8468b8324",
+      "blockNumber": "25961999",
+      "gasUsed": "85404",
+      "costWei": "1708080098470812",
+      "memoId": "0xd6d6d2d2e2f99491b64d0fa23ab91da4ad67851a128feec5abadf2686a8ed58b"
+    }
+  ],
+  "receipts": {
+    "A": {
+      "paymentId": "0x0ff3a3bec65082a0d7917eccb5b9cd93dba73f812229adfb4cf6b82e4b2c2d84",
+      "termsHash": "0x611d3276124c974da2c142419808edcd56256699e16ea6ff8e7023a0d2846392",
+      "authorizeTx": "0x0697041f9d71e2b80d78c308a634c49431ddc454dc1cb04326b7245cae152ac3",
+      "attestTx": "0x0d2c0f7da5c6288c508e8af729f9454f145f0e7fb8c1ef070f266382e22c5f04",
+      "outputHash": "0xda0d6409fae98ac0d0f55185f7264d9d508089256483f5ae464791600b8362c6",
+      "captureTx": "0xd59f0d320acf596ef5a15a1109aae7ed70050d6e816b626f68ae25685d9b3b22"
+    },
+    "B": {
+      "paymentId": "0x0099f44233e4d88364b6b2299e8a53d669eaeb3decbf588ca61b1a5ef9ff0c8d",
+      "termsHash": "0xf9a79767ce0c15febf631a8e72c35949dfc0a2fdcca5b13d487e65c103d1b840",
+      "authorizeTx": "0x1837d7cb39959fe7517b5432dc2991cb70c537ea7a32f14a596973724775c7ad",
+      "attestTx": "0x54aae49af79ca741ec30bbf508359e6497127642fa4446912c881713cd355bfb",
+      "flagTx": "0x05855d92db957d892288ee743aeb47d4fc70478fbdb7cd5931604247a8715c22",
+      "reasonHash": "0x9012dc0b39b618e663319bbe8631e47b34a6d91819b355fd732d62a769d1a6d8",
+      "voidTx": "0x1223f1a53aa3424c2ccd4dc207f1b85a2c5fef86edabbabec436b3d8468b8324"
+    }
+  },
+  "gas": {
+    "totalGasUsed": "983340",
+    "totalCostWei": "19666801133791020",
+    "totalCostUSDC": "0.019666801133791021",
+    "note": "recomputed from per-tx receipts (phase1+resume)"
+  },
+  "checks": [
+    {
+      "name": "deployer address matches expected",
+      "ok": true,
+      "detail": "0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3"
+    },
+    {
+      "name": "chain id == 5042",
+      "ok": true,
+      "detail": "5042"
+    },
+    {
+      "name": "challengeWindow == 300",
+      "ok": true,
+      "detail": "300"
+    },
+    {
+      "name": "deployer holds >= 0.03 USDC (ERC-20 face)",
+      "ok": true,
+      "detail": "5.084671"
+    },
+    {
+      "name": "deployer holds gas (>= 0.05 USDC native)",
+      "ok": true,
+      "detail": "5.084671308735184427"
+    },
+    {
+      "name": "builder:approve calldata matches UI spec",
+      "ok": true,
+      "detail": "innerSel=true outerSel=true to==MEMO:true innerTarget:true gas:120000==120000"
+    },
+    {
+      "name": "builder:authorize calldata matches UI spec",
+      "ok": true,
+      "detail": "innerSel=true outerSel=true to==MEMO:true innerTarget:true gas:250000==250000"
+    },
+    {
+      "name": "builder:attestDelivery calldata matches UI spec",
+      "ok": true,
+      "detail": "innerSel=true outerSel=true to==MEMO:true innerTarget:true gas:150000==150000"
+    },
+    {
+      "name": "builder:capture calldata matches UI spec",
+      "ok": true,
+      "detail": "innerSel=true outerSel=true to==MEMO:true innerTarget:true gas:120000==120000"
+    },
+    {
+      "name": "builder:flagNonDelivery calldata matches UI spec",
+      "ok": true,
+      "detail": "innerSel=true outerSel=true to==MEMO:true innerTarget:true gas:120000==120000"
+    },
+    {
+      "name": "builder:void calldata matches UI spec",
+      "ok": true,
+      "detail": "innerSel=true outerSel=true to==MEMO:true innerTarget:true gas:120000==120000"
+    },
+    {
+      "name": "paymentId A fresh (status NONE)",
+      "ok": true,
+      "detail": "NONE"
+    },
+    {
+      "name": "A: OPEN after authorize",
+      "ok": true,
+      "detail": "OPEN"
+    },
+    {
+      "name": "A: ATTESTED after attestDelivery",
+      "ok": true,
+      "detail": "ATTESTED"
+    },
+    {
+      "name": "A: CAPTURED after capture",
+      "ok": true,
+      "detail": "CAPTURED"
+    },
+    {
+      "name": "A: seller received 0.01 USDC on capture",
+      "ok": false,
+      "detail": "delta=0.008252"
+    },
+    {
+      "name": "deployer address matches expected",
+      "ok": true,
+      "detail": "0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3"
+    },
+    {
+      "name": "A: still CAPTURED (terminal)",
+      "ok": true,
+      "detail": "CAPTURED"
+    },
+    {
+      "name": "memo anchor:A authorize",
+      "ok": true,
+      "detail": "target==escrow:true callDataHash match:true"
+    },
+    {
+      "name": "memo anchor:A capture",
+      "ok": true,
+      "detail": "target==escrow:true callDataHash match:true"
+    },
+    {
+      "name": "A capture payout: escrow paid exactly 0.01 USDC (Transfer event)",
+      "ok": true,
+      "detail": "value=10000 (6-dec base units)"
+    },
+    {
+      "name": "paymentId B fresh (status NONE)",
+      "ok": true,
+      "detail": "NONE"
+    },
+    {
+      "name": "B: OPEN after authorize",
+      "ok": true,
+      "detail": "OPEN"
+    },
+    {
+      "name": "B: ATTESTED after attestDelivery",
+      "ok": true,
+      "detail": "ATTESTED"
+    },
+    {
+      "name": "B: FLAGGED after flagNonDelivery",
+      "ok": true,
+      "detail": "FLAGGED"
+    },
+    {
+      "name": "B: VOIDED after void",
+      "ok": true,
+      "detail": "VOIDED"
+    },
+    {
+      "name": "B void refund: escrow paid exactly 0.01 USDC (Transfer event)",
+      "ok": true,
+      "detail": "value=10000 (6-dec base units)"
+    },
+    {
+      "name": "memo anchor:B void",
+      "ok": true,
+      "detail": "target==escrow:true callDataHash match:true"
+    },
+    {
+      "name": "memo anchor:B authorize",
+      "ok": true,
+      "detail": "target==escrow:true callDataHash match:true"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+/* RAINCHECK landing chrome — DESIGN STANDARD (Phase A).
+   Tokens (§9): bg #0B1220 · accent #35E0FF · paper #F4EFE6 · text-on-dark #F4FEFF.
+   Scoped under .rc- to avoid collisions. */
+
+.rc-landing {
+  --rc-bg: #0b1220;
+  --rc-accent: #35e0ff;
+  --rc-paper: #f4efe6;
+  --rc-ondark: #f4feff;
+
+  background: var(--rc-bg);
+  color: var(--rc-ondark);
+  min-height: 100svh;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- fixed minimal nav (§3, §6) ---------- */
+.rc-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(20px, 4vw, 56px);
+  background: rgba(11, 18, 32, 0.82);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(244, 254, 255, 0.08);
+}
+
+.rc-wordmark {
+  font-weight: 900;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--rc-ondark);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rc-mark-dot {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--rc-accent);
+  display: inline-block;
+  margin-right: 0.4em;
+}
+
+.rc-nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.5vw, 30px);
+}
+
+.rc-nav-link {
+  color: rgba(244, 254, 255, 0.75);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+
+.rc-nav-link:hover {
+  color: var(--rc-accent);
+}
+
+/* nav CTA is GHOST — the single primary per screen lives in the hero (§6) */
+.rc-nav-cta {
+  color: var(--rc-accent);
+  border: 1.5px solid rgba(53, 224, 255, 0.55);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 10px 20px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.rc-nav-cta:hover {
+  background: rgba(53, 224, 255, 0.12);
+  border-color: var(--rc-accent);
+}
+
+/* ---------- section flow ---------- */
+.rc-sections {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .rc-nav-link {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-nav-cta,
+  .rc-nav-link {
+    transition: none;
+  }
+}

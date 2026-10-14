@@ -1,0 +1,1 @@
+{"compilerOptions":{"allowSyntheticDefaultImports":true,"esModuleInterop":true,"lib":["ES2023"],"module":"ESNext","moduleResolution":"bundler","skipLibCheck":true,"strict":true,"target":"ES2022","types":["node"]},"include":["MemoClient.ts","memo.test.ts"]}
