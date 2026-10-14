@@ -1,0 +1,14 @@
+/* BackgroundBeams — absolute-fill SVG beam field, decorative. */
+.rcx-beams {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rcx-beams-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

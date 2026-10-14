@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { PrivyProvider } from "@privy-io/react-auth";
 import App from "./App";
+import { WalletProvider } from "./components/dashboard/WalletContext";
 import "./index.css";
 import { arc } from "./lib/chain";
 
@@ -23,7 +24,13 @@ const PRIVY_APP_ID = (
 // Rendering a second Router inside App's would throw
 // "You cannot render a <Router> inside another <Router>".
 function Root() {
-  const app = <App />;
+  // WalletProvider is the single wallet state for the app shell; it picks
+  // the Privy road only when the PrivyProvider above is actually mounted.
+  const app = (
+    <WalletProvider>
+      <App />
+    </WalletProvider>
+  );
 
   if (!PRIVY_APP_ID) {
     if (import.meta.env.DEV) {

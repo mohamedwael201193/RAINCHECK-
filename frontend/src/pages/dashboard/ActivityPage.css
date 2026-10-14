@@ -142,8 +142,8 @@
   align-items: flex-start;
   padding: 16px 0 16px 34px;
   border-top: 1px solid var(--rcx-line-soft);
-  animation: rc-feed-enter 0.55s ease-out both;
-  animation-delay: var(--rc-enter, 0ms);
+  /* Entrance animation comes from the vendored Magic UI AnimatedList
+     (.rcx-animated-item) — opacity + translateY only. */
 }
 .rc-feed-row::before {
   content: "";

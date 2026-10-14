@@ -14,6 +14,27 @@
   position: relative;
 }
 
+/* Verify hero art — vendored ReactBits aurora behind a CC0 3D shield. */
+.rc-verify-art {
+  position: relative;
+  height: 148px;
+  border: 1px solid var(--rcx-line);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 26px;
+  background: var(--rcx-ink-2);
+}
+
+.rc-verify-shield3d {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 104px;
+  height: 104px;
+  filter: drop-shadow(0 10px 28px rgba(53, 224, 255, 0.25));
+}
+
 .rc-verify-seal {
   position: absolute;
   right: 0;

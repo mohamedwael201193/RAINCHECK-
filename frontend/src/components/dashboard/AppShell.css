@@ -1,0 +1,444 @@
+/* AppShell — relay-style app frame. Tokens come from .rcx (styles/app.css).
+   Sidebar 248px on desktop; compact top bar + bottom tab nav on mobile.
+   Motion: opacity/transform only, reduced-motion safe. */
+
+.rcs {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100svh;
+}
+
+/* Ambient aurora backdrop — fixed, behind everything, never interactive. */
+.rcs-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.rcs-sidebar,
+.rcs-main {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------- sidebar ---------------- */
+
+.rcs-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 16px 18px;
+  border-right: 1px solid var(--rcx-line-soft);
+  background: rgba(13, 23, 40, 0.6);
+  overflow-y: auto;
+}
+
+.rcs-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--rcx-ice);
+  font-family: var(--rcx-display);
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  min-height: 44px;
+  padding: 0 8px;
+}
+
+.rcs-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--rcx-line);
+  border-radius: 10px;
+  background: var(--rcx-ink);
+}
+
+.rcs-brand-mobile {
+  display: none;
+}
+
+/* wallet status card */
+.rcs-wallet-card {
+  border: 1px solid var(--rcx-line);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--rcx-ink-2);
+  display: grid;
+  gap: 8px;
+}
+
+.rcs-wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rcs-wallet-state {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rcx-muted);
+}
+
+.rcs-wallet-addr {
+  font-family: var(--rcx-mono);
+  font-size: 14px;
+  color: var(--rcx-ice);
+}
+
+.rcs-wallet-net {
+  margin: 0;
+  font-size: 12px;
+  color: var(--rcx-faint);
+}
+
+.rcs-wallet-copy {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--rcx-muted);
+}
+
+.rcs-wallet-error {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--rcx-danger);
+}
+
+.rcs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1.5px solid var(--rcx-faint);
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rcs-dot.is-on {
+  background: #4ade80;
+  border-color: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.7);
+}
+
+/* nav */
+.rcs-nav {
+  display: grid;
+  gap: 4px;
+}
+
+.rcs-navlink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--rcx-muted);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 600;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.rcs-navlink:hover {
+  color: var(--rcx-ice);
+  background: rgba(244, 254, 255, 0.04);
+}
+
+.rcs-navlink.is-active {
+  color: var(--rcx-cyan);
+  background: rgba(53, 224, 255, 0.08);
+  font-weight: 700;
+}
+
+.rcs-navlink.is-active::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--rcx-cyan);
+  box-shadow: 0 0 10px rgba(53, 224, 255, 0.8);
+}
+
+.rcs-navicon {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.rcs-navicon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.rcs-navlink-guide {
+  margin-top: 8px;
+  border-top: 1px dashed var(--rcx-line);
+  border-radius: 0;
+  padding-top: 14px;
+}
+
+.rcs-side-foot {
+  margin-top: auto;
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rcx-line-soft);
+}
+
+.rcs-net {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--rcx-muted);
+  padding: 0 8px;
+  min-height: 32px;
+}
+
+.rcs-connect {
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+}
+
+/* ---------------- top bar + content ---------------- */
+
+.rcs-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rcs-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--rcx-line-soft);
+  background: rgba(11, 18, 32, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.rcs-topbar-in {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 clamp(20px, 4vw, 40px);
+  min-height: 68px;
+}
+
+.rcs-title {
+  margin: 0;
+  font-family: var(--rcx-display);
+  font-size: clamp(20px, 2.4vw, 27px);
+  letter-spacing: 0.01em;
+  color: var(--rcx-ice);
+}
+
+.rcs-top-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rcs-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--rcx-line);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rcx-muted);
+  background: var(--rcx-ink-2);
+  font-family: var(--rcx-mono);
+}
+
+.rcs-pill.is-on {
+  color: var(--rcx-ice);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.rcs-disconnect {
+  background: none;
+  border: none;
+  color: var(--rcx-faint);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rcs-disconnect:hover {
+  color: var(--rcx-ice);
+}
+
+.rcs-top-connect {
+  min-height: 44px;
+}
+
+/* Compact mobile wallet control — hidden on desktop, the ONLY wallet
+   control at ≤480px (pill + desktop buttons hide to prevent clipping). */
+.rcs-mwallet {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  /* (0,2,0) specificity: must beat .rcx-btn regardless of import order. */
+  .rcs-top-actions .rcs-pill,
+  .rcs-top-actions .rcs-disconnect,
+  .rcs-top-actions .rcs-top-connect {
+    display: none;
+  }
+
+  .rcs-mwallet {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: var(--rcx-cyan);
+    color: #06222b;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .rcs-mwallet:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  .rcs-mwallet.is-on {
+    background: var(--rcx-ink-2);
+    color: var(--rcx-ice);
+    border-color: rgba(74, 222, 128, 0.4);
+    font-family: var(--rcx-mono);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .rcs-title {
+    font-size: 19px;
+  }
+}
+
+.rcs-content {
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 32px clamp(20px, 4vw, 40px) 96px;
+}
+
+/* ---------------- mobile ---------------- */
+
+.rcs-mobilenav {
+  display: none;
+}
+
+@media (max-width: 959px) {
+  .rcs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rcs-sidebar {
+    display: none;
+  }
+
+  .rcs-brand-mobile {
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  .rcs-topbar-in {
+    min-height: 60px;
+  }
+
+  .rcs-top-connect {
+    padding: 10px 14px;
+    font-size: 13.5px;
+  }
+
+  .rcs-content {
+    padding: 24px 16px 120px;
+  }
+
+  .rcs-mobilenav {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: rgba(11, 18, 32, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--rcx-line);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .rcs-mtab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    color: var(--rcx-faint);
+    text-decoration: none;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-radius: 10px;
+  }
+
+  .rcs-mtab-icon {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+  }
+
+  .rcs-mtab-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .rcs-mtab.is-active {
+    color: var(--rcx-cyan);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rcs-navlink,
+  .rcs-dot {
+    transition: none;
+  }
+}

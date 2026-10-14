@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import TokenIcon from "../TokenIcon";
+import { LifecycleDots, StatusBadge } from "./Lifecycle";
 import {
   Receipt,
   formatRelative,
   formatUSDC,
   shortHex,
-  statusMeaning,
 } from "../../lib/receipts";
 
 /**
@@ -17,18 +17,12 @@ import {
  */
 
 function Pill({ status }: { status: string }) {
-  const key = String(status).toLowerCase();
-  const cls =
-    key === "open" ||
-    key === "attested" ||
-    key === "flagged" ||
-    key === "captured" ||
-    key === "voided"
-      ? `rcx-pill rcx-pill-${key}`
-      : "rcx-pill rcx-pill-unknown";
   return (
-    <span className={cls} title={`${status} — ${statusMeaning(status)}`}>
-      {status}
+    <span
+      style={{ display: "inline-flex", alignItems: "center", gap: 10 }}
+    >
+      <StatusBadge status={status} />
+      <LifecycleDots status={status} />
     </span>
   );
 }
@@ -53,12 +47,20 @@ function TicketMark() {
 export default function ReceiptCard({ receipt }: { receipt: Receipt }) {
   const to = `/dashboard/r/${receipt.paymentId}`;
   const symbol = receipt.token === "EURC" ? "EURC" : "USDC";
+  const statusKey = String(receipt.status).toUpperCase();
+  // Settled receipts show the ORIGINAL escrowed amount — never a bare "0" —
+  // with an honest settled treatment instead of the "locked" label.
+  const settled =
+    statusKey === "VOIDED" ? "refunded" : statusKey === "CAPTURED" ? "paid" : null;
+  const amountCaption = settled
+    ? `${symbol} · ${settled}`
+    : `${symbol} · locked`;
   const exactAmount = `${formatUSDC(receipt.amount)} ${symbol}`;
   return (
     <Link
       to={to}
       className="rc-ticket rcx-rise"
-      aria-label={`Receipt ${receipt.paymentId}, ${receipt.status}, ${exactAmount}`}
+      aria-label={`Receipt ${receipt.paymentId}, ${receipt.status}, ${exactAmount}${settled ? `, ${settled}` : ""}`}
     >
       <div className="rc-ticket-top">
         <span className="rc-ticket-label">
@@ -69,15 +71,19 @@ export default function ReceiptCard({ receipt }: { receipt: Receipt }) {
       </div>
 
       <div
-        className="rc-ticket-amount"
-        title={`Exact amount locked: ${receipt.amount} of 6-decimal ${symbol}`}
+        className={`rc-ticket-amount${settled ? " is-settled" : ""}`}
+        title={
+          settled
+            ? `Original amount escrowed: ${receipt.amount} of 6-decimal ${symbol} — ${settled} on-chain`
+            : `Exact amount locked: ${receipt.amount} of 6-decimal ${symbol}`
+        }
       >
         <span className="rc-token-ring" aria-hidden="true">
           <TokenIcon token={symbol} size={30} />
         </span>
         <span className="rc-ticket-figure">
           <span className="rc-ticket-value">{formatUSDC(receipt.amount)}</span>
-          <span className="rc-ticket-sym">{symbol} · locked</span>
+          <span className="rc-ticket-sym">{amountCaption}</span>
         </span>
       </div>
 

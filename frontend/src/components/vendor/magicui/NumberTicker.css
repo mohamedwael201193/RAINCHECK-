@@ -1,0 +1,17 @@
+/* NumberTicker — tabular digits, no layout shift while counting. */
+.rcx-number-ticker {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+.rcx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

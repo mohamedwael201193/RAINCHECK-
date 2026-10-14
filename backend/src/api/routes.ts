@@ -19,6 +19,39 @@ function badRequest(res: Response, message: string) {
   return res.status(400).json({ error: message });
 }
 
+/**
+ * One ReceiptView → the flat presentation shape both endpoints serve.
+ * Same fields as GET /api/receipts rows, so the dashboard list and the
+ * detail page never disagree. Amounts are the receipt's TOKEN base units
+ * (6-decimal, string); `token` says which token. All derived from chain
+ * logs via the ReceiptSource — nothing invented.
+ */
+function toSummary(v: {
+  receipt: { paymentId: string; status: ReceiptStatus; paymentProof: { amount: string } };
+  buyer: string;
+  seller: string;
+  escrowAddress?: string;
+  openedAt: number;
+  updatedAt: number;
+  receiptHash: string;
+}): ReceiptSummary {
+  return {
+    paymentId: v.receipt.paymentId,
+    status: v.receipt.status,
+    buyer: v.buyer,
+    seller: v.seller,
+    // Presentation-only, derived from the originating escrow address via
+    // the TOKEN_BY_ESCROW config map — never part of the canonical hash.
+    token: tokenForEscrow(v.escrowAddress) ?? "USDC",
+    escrow: (v.escrowAddress ?? ESCROW_ADDRESS).toLowerCase(),
+    amountUSDC: toUsdcString(BigInt(v.receipt.paymentProof.amount)),
+    amountUSDCBase: v.receipt.paymentProof.amount,
+    openedAt: v.openedAt,
+    updatedAt: v.updatedAt,
+    receiptHash: v.receiptHash,
+  };
+}
+
 function parsePagination(req: Request): { limit: number; offset: number } | { error: string } {
   const rawLimit = req.query.limit ?? String(DEFAULT_LIMIT);
   const rawOffset = req.query.offset ?? "0";
@@ -69,21 +102,7 @@ export function createRoutes(store: ReceiptSource): Router {
     const total = items.length;
     const summaries: ReceiptSummary[] = items
       .slice(page.offset, page.offset + page.limit)
-      .map((v) => ({
-        paymentId: v.receipt.paymentId,
-        status: v.receipt.status,
-        buyer: v.buyer,
-        seller: v.seller,
-        // Presentation-only, derived from the originating escrow address via
-        // the TOKEN_BY_ESCROW config map — never part of the canonical hash.
-        token: tokenForEscrow(v.escrowAddress) ?? "USDC",
-        escrow: (v.escrowAddress ?? ESCROW_ADDRESS).toLowerCase(),
-        amountUSDC: toUsdcString(BigInt(v.receipt.paymentProof.amount)),
-        amountUSDCBase: v.receipt.paymentProof.amount,
-        openedAt: v.openedAt,
-        updatedAt: v.updatedAt,
-        receiptHash: v.receiptHash,
-      }));
+      .map(toSummary);
 
     return res.json({
       total,
@@ -105,15 +124,29 @@ export function createRoutes(store: ReceiptSource): Router {
     if (!view) {
       return res.status(404).json({ error: "receipt not found" });
     }
+    const summary = toSummary(view);
+    const delivery = view.receipt.delivery;
+    const attested =
+      delivery && "outputHash" in delivery ? delivery : null;
+    const flagged =
+      delivery && "nonDelivery" in delivery ? delivery.nonDelivery : null;
     return res.json({
+      // Flat receipt fields (same shape as the list rows + detail extras) —
+      // the dashboard detail page reads these at top level.
+      ...summary,
+      amount: view.receipt.paymentProof.amount, // 6-decimal base units, string
+      deadline: view.receipt.terms.deadline, // unix seconds
+      termsHash: view.receipt.terms.termsHash,
+      terms: view.receipt.terms,
+      outputHash: attested?.outputHash ?? null,
+      attestedAt: attested?.attestedAt ?? null,
+      flagReasonHash: flagged?.reasonHash ?? null,
+      flaggedBy: flagged?.flaggedBy ?? null,
+      // Full canonical view (the /verify page unwraps this tolerantly —
+      // extra fields never enter the canonical hash it recomputes).
       receipt: view.receipt,
       receiptHash: view.receiptHash,
       timeline: view.timeline,
-      // Presentation-only token + originating escrow (see list endpoint).
-      // The /verify page unwraps this full view tolerantly — extra fields
-      // never enter the canonical hash it recomputes.
-      token: tokenForEscrow(view.escrowAddress) ?? "USDC",
-      escrow: (view.escrowAddress ?? ESCROW_ADDRESS).toLowerCase(),
     });
   });
 

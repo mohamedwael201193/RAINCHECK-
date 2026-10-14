@@ -1,0 +1,49 @@
+/* TapeEmpty — relay-style honest empty state: dashed tape illustration,
+   headline, one plain line, one action. */
+
+.rce {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px dashed var(--rcx-line);
+  border-radius: 18px;
+  padding: clamp(36px, 6vw, 64px) 24px;
+  background: rgba(13, 23, 40, 0.45);
+}
+
+.rce-art,
+.rce-headline,
+.rce-sub,
+.rce-action {
+  position: relative;
+  z-index: 1;
+}
+
+.rce-art {
+  width: 120px;
+  height: 84px;
+  margin-bottom: 20px;
+}
+
+.rce-headline {
+  margin: 0 0 8px;
+  font-family: var(--rcx-display);
+  font-size: clamp(19px, 2.6vw, 25px);
+  color: var(--rcx-ice);
+  letter-spacing: 0.01em;
+}
+
+.rce-sub {
+  margin: 0;
+  max-width: 34rem;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--rcx-muted);
+}
+
+.rce-action {
+  margin-top: 22px;
+}

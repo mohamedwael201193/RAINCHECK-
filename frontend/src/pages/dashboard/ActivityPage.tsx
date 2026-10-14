@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { envVar, formatUSDC, shortHex } from "../../lib/chain";
 import TokenIcon from "../../components/TokenIcon";
-import AppHeader from "../../components/dashboard/AppHeader";
+import AppShell from "../../components/dashboard/AppShell";
+import TapeEmpty from "../../components/dashboard/TapeEmpty";
+import { AnimatedList } from "../../components/vendor/magicui/AnimatedList";
+import { NumberTicker } from "../../components/vendor/magicui/NumberTicker";
 import "../../styles/app.css";
 import "./ActivityPage.css";
 
@@ -105,38 +108,6 @@ type LoadState =
 function apiBase(): string | null {
   const base = envVar("VITE_API_URL")?.replace(/\/+$/, "");
   return base || null;
-}
-
-/** Number ticker: tweens to the new value only when it actually changes. */
-function useTicker(target: number): string {
-  const [shown, setShown] = useState(target);
-  const shownRef = useRef(target);
-  useEffect(() => {
-    if (shownRef.current === target) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const from = shownRef.current;
-    if (reduce) {
-      shownRef.current = target;
-      setShown(target);
-      return;
-    }
-    const start = performance.now();
-    const dur = 700;
-    let raf = 0;
-    const tick = (now: number) => {
-      const p = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      const v = from + (target - from) * eased;
-      shownRef.current = v;
-      setShown(v);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target]);
-  return shown >= 1000
-    ? Math.round(shown).toLocaleString()
-    : (Math.round(shown * 10) / 10).toString();
 }
 
 async function fetchJson(url: string): Promise<unknown> {
@@ -317,8 +288,7 @@ export default function ActivityPage() {
   }, [state]);
 
   return (
-    <div className="rcx rc-activity">
-      <AppHeader />
+    <AppShell title="Activity">
       <div className="rc-activity-inner">
         <header className="rc-activity-head rcx-rise">
           <p className="rcx-eyebrow">Activity</p>
@@ -357,17 +327,12 @@ export default function ActivityPage() {
         )}
 
         {(state.kind === "config-error" || state.kind === "error") && (
-          <section className="rc-panel rc-empty" aria-live="polite">
-            <svg className="rc-empty-icon" viewBox="0 0 48 48" aria-hidden="true">
-              <circle cx="24" cy="24" r="20" fill="none" stroke="#35E0FF" strokeWidth="2.5" />
-              <path d="M24 14v12" stroke="#F4FEFF" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="24" cy="33" r="2" fill="#F4FEFF" />
-            </svg>
-            <p className="rc-empty-line">{state.message}</p>
-            <button type="button" className="rc-ghost" onClick={() => setNonce((n) => n + 1)}>
-              Try again
-            </button>
-          </section>
+          <TapeEmpty
+            headline="The feed is unreachable right now."
+            sub={state.message}
+            actionLabel="Try again"
+            onAction={() => setNonce((n) => n + 1)}
+          />
         )}
 
         {state.kind === "ready" && stats && (
@@ -387,18 +352,12 @@ export default function ActivityPage() {
             )}
 
             {events.length === 0 ? (
-              <section className="rc-panel rc-empty">
-                <svg className="rc-empty-icon" viewBox="0 0 48 48" aria-hidden="true">
-                  <rect x="10" y="8" width="28" height="32" rx="3" fill="none" stroke="#35E0FF" strokeWidth="2.5" />
-                  <path d="M16 17h16M16 23h16M16 29h10" stroke="#F4FEFF" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-                <p className="rc-empty-line">
-                  No receipts yet — the feed fills in as receipts open on-chain.
-                </p>
-                <Link to="/verify" className="rc-ghost rc-ghost-link">
-                  Verify a receipt
-                </Link>
-              </section>
+              <TapeEmpty
+                headline="Nothing on the tape yet."
+                sub="The feed fills in as receipts open on-chain — every row will link to the transaction that made it happen."
+                actionLabel="Verify a receipt"
+                actionTo="/verify"
+              />
             ) : (
               <>
                 <div className="rc-filters" role="tablist" aria-label="Filter events">
@@ -416,12 +375,11 @@ export default function ActivityPage() {
                   ))}
                 </div>
 
-                <ol className="rc-feed" key={filter}>
-                  {filtered.map((e, i) => (
+                <AnimatedList as="ol" className="rc-feed" key={filter} stagger={45}>
+                  {filtered.map((e) => (
                     <li
                       key={e.id}
                       className="rc-feed-row"
-                      style={{ ["--rc-enter" as string]: `${Math.min(i, 12) * 45}ms` }}
                     >
                       <span className={`rc-kind rc-kind-${e.kind.toLowerCase()}`}>
                         {e.label}
@@ -458,7 +416,7 @@ export default function ActivityPage() {
                       </div>
                     </li>
                   ))}
-                </ol>
+                </AnimatedList>
                 {filtered.length === 0 && (
                   <p className="rc-note">Nothing here yet under this filter.</p>
                 )}
@@ -508,7 +466,7 @@ export default function ActivityPage() {
           </>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }
 
@@ -521,11 +479,12 @@ function StatCard({
   value: number;
   tone?: "warn" | "good";
 }) {
-  const shown = useTicker(value);
   return (
     <div className="rc-stat-card">
       <div className="rc-stat-label">{label}</div>
-      <div className={`rc-stat-value ${tone ? `is-${tone}` : ""}`}>{shown}</div>
+      <div className={`rc-stat-value ${tone ? `is-${tone}` : ""}`}>
+        <NumberTicker value={value} decimalPlaces={0} />
+      </div>
     </div>
   );
 }

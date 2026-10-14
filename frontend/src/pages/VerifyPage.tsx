@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import AppHeader from "../components/dashboard/AppHeader";
+import AppShell from "../components/dashboard/AppShell";
+import AmbientAurora from "../components/dashboard/AmbientAurora";
 import { txUrl } from "../lib/chain";
 import {
   fetchNewestReceiptView,
@@ -167,16 +168,22 @@ export default function VerifyPage() {
   const busy = phase.kind === "verifying" || phase.kind === "loading-live";
 
   return (
-    <div className="rcx rc-verify">
-      <AppHeader />
+    <AppShell title="Verify">
       <div className="rc-verify-inner">
         <header className="rc-verify-head rcx-rise">
           <p className="rcx-eyebrow">Trust, but verify</p>
-          <svg className="rc-verify-seal" viewBox="0 0 96 96" fill="none" aria-hidden="true">
-            <rect x="26" y="10" width="44" height="76" rx="4" stroke="#35E0FF" strokeWidth="3" />
-            <path d="M26 22l6-5 6 5 6-5 6 5 6-5 6 5 6-5 6 5" stroke="#35E0FF" strokeWidth="3" strokeLinejoin="round" transform="translate(0,64)" />
-            <path d="M38 44l9 9 16-19" stroke="#F4EFE6" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          {/* CSS aurora glow + CC0 3D shield — the proof motif. */}
+          <div className="rc-verify-art" aria-hidden="true">
+            <AmbientAurora opacity={1} />
+            <img
+              src="/assets/3d/shield-3d.webp"
+              width="96"
+              height="96"
+              alt=""
+              draggable={false}
+              className="rc-verify-shield3d"
+            />
+          </div>
           <h1 className="rc-display">
             DON&apos;T TRUST.
             <br />
@@ -435,6 +442,6 @@ export default function VerifyPage() {
           </section>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

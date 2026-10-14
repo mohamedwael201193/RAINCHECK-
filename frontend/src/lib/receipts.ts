@@ -71,9 +71,13 @@ function coerceReceipt(raw: unknown): Receipt | null {
   const paymentId = typeof r.paymentId === "string" ? r.paymentId : null;
   const seller = typeof r.seller === "string" ? r.seller : null;
   if (!paymentId || !seller) return null;
+  // The Receipt API serves the ORIGINAL escrowed amount as `amountUSDCBase`
+  // (present for every status — open, voided, captured alike). Older shapes
+  // used `amount`; prefer the explicit field, fall back gracefully.
+  const amountRaw = r.amountUSDCBase ?? r.amount;
   const amount =
-    typeof r.amount === "string" || typeof r.amount === "number"
-      ? String(r.amount)
+    typeof amountRaw === "string" || typeof amountRaw === "number"
+      ? String(amountRaw)
       : "0";
   return {
     paymentId,

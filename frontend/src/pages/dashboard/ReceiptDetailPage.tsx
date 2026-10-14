@@ -21,7 +21,9 @@ import {
 } from "../../components/ui/alert-dialog";
 import { Toaster, toast } from "../../components/ui/sonner";
 import TokenIcon from "../../components/TokenIcon";
-import AppHeader from "../../components/dashboard/AppHeader";
+import AppShell from "../../components/dashboard/AppShell";
+import { useWallet } from "../../components/dashboard/WalletContext";
+import { LifecycleSteps } from "../../components/dashboard/Lifecycle";
 import "../../styles/app.css";
 import {
   type ActionKind,
@@ -30,7 +32,6 @@ import {
   type PaymentTokenSymbol,
   addressUrl,
   buildActionTx,
-  connectWallet,
   countdownText,
   envVar,
   ESCROW_ADDRESS,
@@ -274,6 +275,12 @@ export default function ReceiptDetailPage() {
   const [walletError, setWalletError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
+  // Shared shell wallet: connecting once in the sidebar connects here too.
+  const shellWallet = useWallet();
+  useEffect(() => {
+    setWallet(shellWallet.address);
+  }, [shellWallet.address]);
+
   // Non-destructive action preview (attest / capture): exact tx before prompt
   const [pendingAction, setPendingAction] = useState<{
     kind: ActionKind;
@@ -416,12 +423,13 @@ export default function ReceiptDetailPage() {
   const onConnect = useCallback(async () => {
     setWalletError(null);
     try {
-      const addr = await connectWallet();
-      setWallet(addr);
+      // Shared shell wallet (Privy road when enabled, injected otherwise);
+      // the address syncs into local state via the effect above.
+      await shellWallet.connect();
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : String(err));
     }
-  }, []);
+  }, [shellWallet]);
 
   useEffect(() => {
     const provider = getInjectedProvider();
@@ -615,8 +623,7 @@ export default function ReceiptDetailPage() {
 
   if (load.kind === "loading") {
     return (
-      <div className="rcx">
-        <AppHeader />
+      <AppShell title="Receipt">
         <div className="rc-detail">
           <Toaster />
           <div className="rc-skeleton rc-skeleton-title" />
@@ -624,14 +631,13 @@ export default function ReceiptDetailPage() {
           <div className="rc-skeleton" />
           <div className="rc-skeleton" />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   if (load.kind !== "ready") {
     return (
-      <div className="rcx">
-        <AppHeader />
+      <AppShell title="Receipt">
         <div className="rc-detail">
           <Toaster />
           <Link to="/dashboard" className="rc-back">
@@ -653,7 +659,7 @@ export default function ReceiptDetailPage() {
             </button>
           </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
@@ -684,8 +690,7 @@ export default function ReceiptDetailPage() {
   const canVoidAfterDeadline = status === "OPEN" && deadlinePassed === true;
 
   return (
-    <div className="rcx">
-      <AppHeader />
+    <AppShell title="Receipt">
       <div className="rc-detail">
       <Toaster />
       <Link to="/dashboard" className="rc-back">
@@ -698,6 +703,10 @@ export default function ReceiptDetailPage() {
           <span className={pillClass}>{status}</span>
           {meaning && <p className="rc-meaning">{meaning}</p>}
         </div>
+        {/* Lifecycle position: authorize → attest → capture/void */}
+        <div className="rc-lifecycle" aria-label="Lifecycle position">
+          <LifecycleSteps status={status} />
+        </div>
         <div className="rc-header-amount">
           <span className="rc-header-tokenring" aria-hidden="true">
             <TokenIcon token={symbol} size={40} />
@@ -707,7 +716,15 @@ export default function ReceiptDetailPage() {
               {formatUSDC(r.amount)}{" "}
               <span className="rc-header-sym">{symbol}</span>
             </p>
-            <p className="rc-header-cap">locked in escrow</p>
+            {/* Settled receipts show the ORIGINAL escrowed amount — never a
+                bare "0" — with an honest settled treatment (P2). */}
+            <p className="rc-header-cap">
+              {status === "VOIDED"
+                ? "originally escrowed · refunded on-chain"
+                : status === "CAPTURED"
+                  ? "originally escrowed · paid to seller"
+                  : "locked in escrow"}
+            </p>
           </div>
         </div>
         <h1 className="rc-payment-id" title={r.paymentId}>
@@ -1500,7 +1517,7 @@ export default function ReceiptDetailPage() {
         </ul>
       </section>
       </div>
-    </div>
+    </AppShell>
   );
 }
 

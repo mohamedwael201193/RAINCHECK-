@@ -157,6 +157,16 @@
   color: var(--rcx-muted);
   font-size: 15px;
 }
+
+/* Lifecycle stepper placement in the detail header. */
+.rc-lifecycle {
+  margin: 18px 0 4px;
+  padding: 16px 18px;
+  border: 1px dashed var(--rcx-line);
+  border-radius: 14px;
+  background: rgba(11, 18, 32, 0.4);
+  overflow-x: auto;
+}
 .rc-payment-id {
   margin: 0 0 6px;
   font-family: var(--rcx-display);

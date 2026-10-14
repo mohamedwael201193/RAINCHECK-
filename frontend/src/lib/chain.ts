@@ -38,8 +38,14 @@ import {
  * (F1's scaffold may add those later — this cast avoids any conflict).
  */
 export function envVar(key: string): string | undefined {
-  const im = import.meta as unknown as { env?: Record<string, unknown> };
-  const v = im.env?.[key];
+  // KEEP the `(import.meta as {...}).env` member access literal on this line:
+  // Vite only injects import.meta.env when it sees that exact shape.
+  // Aliasing `import.meta` to a variable first (the old code did
+  // `const im = import.meta`) silently yields undefined in dev — verified
+  // in-browser 2026-10-15. receipts.ts apiBase() uses this same pattern.
+  const env =
+    (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
+  const v = env[key];
   return typeof v === "string" && v.length > 0 ? v : undefined;
 }
 
@@ -460,7 +466,13 @@ export interface EthereumProvider {
 
 declare global {
   interface Window {
-    ethereum?: EthereumProvider;
+    // NOTE: @privy-io/react-auth also augments Window.ethereum (as `any`).
+    // This declaration must stay `any`-compatible or tsc raises TS2717
+    // (subsequent property declarations must have the same type).
+    // The typed EthereumProvider interface below is still used for all
+    // function signatures; only the global slot is loose.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ethereum?: any;
   }
 }
 

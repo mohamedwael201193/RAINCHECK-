@@ -1,0 +1,100 @@
+/* AmbientAurora — CSS aurora: soft cyan glow bands, slow drift.
+   Transform + opacity only. No blur() filters — soft edges are
+   radial-gradient falloff. Reduced-motion safe. */
+
+.rcs-amb {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rcs-amb-blob {
+  position: absolute;
+  will-change: transform, opacity;
+}
+
+/* Band A — rain cyan wash, top-left drift */
+.rcs-amb-a {
+  left: -12%;
+  top: -22%;
+  width: 62%;
+  height: 52%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(53, 224, 255, 0.16) 0%,
+    rgba(53, 224, 255, 0.05) 42%,
+    transparent 72%
+  );
+  animation: rcs-amb-drift-a 34s ease-in-out infinite alternate;
+}
+
+/* Band B — deep teal, top-center, counter-drift */
+.rcs-amb-b {
+  left: 28%;
+  top: -28%;
+  width: 55%;
+  height: 58%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(14, 124, 134, 0.22) 0%,
+    rgba(14, 124, 134, 0.07) 45%,
+    transparent 74%
+  );
+  animation: rcs-amb-drift-b 42s ease-in-out infinite alternate;
+}
+
+/* Band C — faint ice-cyan kiss, top-right */
+.rcs-amb-c {
+  right: -14%;
+  top: -18%;
+  width: 48%;
+  height: 44%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(125, 238, 255, 0.1) 0%,
+    transparent 70%
+  );
+  animation: rcs-amb-drift-c 26s ease-in-out infinite alternate;
+}
+
+@keyframes rcs-amb-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.85;
+  }
+  to {
+    transform: translate3d(9%, 6%, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes rcs-amb-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.08);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(-8%, 5%, 0) scale(1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes rcs-amb-drift-c {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.7;
+  }
+  to {
+    transform: translate3d(-10%, 8%, 0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rcs-amb-a,
+  .rcs-amb-b,
+  .rcs-amb-c {
+    animation: none;
+  }
+}

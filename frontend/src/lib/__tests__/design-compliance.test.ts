@@ -92,4 +92,24 @@ describe("design compliance (design-standard.md, binding)", () => {
     expect(TOKENS.textOnDark).toBe("#F4FEFF");
     expect(TOKENS.textOnPaper).toBe("#0B1220");
   });
+
+  it("(4) no file aliases `import.meta` before reading `.env` (Vite injection)", () => {
+    // 2026-10-15: `const im = import.meta; im.env?.[k]` silently yields
+    // undefined in Vite dev — the transform only injects import.meta.env
+    // when it sees the literal `(import.meta as …).env` member access.
+    // Aliasing broke the Activity feed (VITE_API_URL read as empty).
+    const hits: string[] = [];
+    for (const f of files) {
+      if (!/\.(ts|tsx)$/.test(f)) continue;
+      const lines = readFileSync(f, "utf8").split("\n");
+      lines.forEach((line, i) => {
+        if (/=\s*import\.meta\s*;/.test(line))
+          hits.push(`${f}:${i + 1}: ${line.trim()}`);
+      });
+    }
+    expect(
+      hits,
+      `import.meta aliased to a variable (breaks Vite env injection):\n${hits.join("\n")}`,
+    ).toEqual([]);
+  });
 });

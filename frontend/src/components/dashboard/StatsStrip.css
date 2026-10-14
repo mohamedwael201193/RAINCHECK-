@@ -1,0 +1,119 @@
+/* StatsStrip — labeled stat cells, relay TAPE style. */
+
+.rcss {
+  margin: 24px 0 0;
+}
+
+.rcss-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--rcx-line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--rcx-ink-2);
+}
+
+.rcss-cell {
+  padding: 18px 20px;
+  min-width: 0;
+  border-left: 1px solid var(--rcx-line-soft);
+}
+
+.rcss-cell:first-child {
+  border-left: none;
+}
+
+.rcss-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rcx-faint);
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rcss-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--rcx-display);
+  font-size: clamp(21px, 2.4vw, 29px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--rcx-ice);
+  min-height: 34px;
+}
+
+.rcss-num {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcss-sub {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--rcx-faint);
+  line-height: 1.4;
+}
+
+.rcss-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rcss-export-label {
+  font-size: 12.5px;
+  color: var(--rcx-faint);
+  margin-right: 4px;
+}
+
+.rcss-export-btn {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--rcx-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rcx-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.rcss-export-btn:hover {
+  color: var(--rcx-cyan);
+  border-color: rgba(53, 224, 255, 0.5);
+}
+
+.rcss-note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--rcx-faint);
+}
+
+@media (max-width: 760px) {
+  .rcss-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rcss-cell:nth-child(3) {
+    border-left: none;
+  }
+
+  .rcss-cell:nth-child(n + 3) {
+    border-top: 1px solid var(--rcx-line-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rcss-export-btn {
+    transition: none;
+  }
+}

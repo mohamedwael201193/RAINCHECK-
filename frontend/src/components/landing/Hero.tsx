@@ -33,7 +33,12 @@ export default function Hero() {
             alt=""
             className="rc-hero-img rc-ambient-float"
             onError={() => setImgOk(false)}
-            fetchPriority="high"
+            /* React 18 has no fetchPriority in its DOM whitelist (React 19
+               added it); the lowercase attribute passes through cleanly with
+               zero console warnings. Set imperatively so tsc stays happy. */
+            ref={(el) => {
+              if (el) el.setAttribute("fetchpriority", "high");
+            }}
           />
         ) : (
           /* CSS fallback: line-art attestation mark on #0B1220. Shows only

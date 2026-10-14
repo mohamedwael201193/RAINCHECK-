@@ -22,6 +22,34 @@
   gap: 12px;
 }
 
+/* Disconnected nudge — clear CTA, not a dead end. */
+.rc-dash-connect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding: 16px 20px;
+  border: 1px dashed rgba(53, 224, 255, 0.4);
+  border-radius: 16px;
+  background: rgba(53, 224, 255, 0.04);
+}
+
+.rc-dash-connect-title {
+  margin: 0 0 4px;
+  font-weight: 800;
+  font-size: 14.5px;
+  color: var(--rcx-ice);
+}
+
+.rc-dash-connect-sub {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--rcx-muted);
+  max-width: 36rem;
+}
+
 /* ---------- honest stats strip (all values computed from live data) ---------- */
 .rc-stats {
   display: grid;
@@ -211,6 +239,17 @@ a.rc-ticket:active {
   align-items: center;
   gap: 12px;
   padding: 6px 20px 18px;
+}
+
+/* Settled receipts (voided/captured): the ORIGINAL escrowed amount stays
+   visible — never a bare "0" — dimmed with an honest settled caption. */
+.rc-ticket-amount.is-settled .rc-ticket-value {
+  opacity: 0.62;
+}
+
+.rc-ticket-amount.is-settled .rc-token-ring {
+  opacity: 0.75;
+  filter: saturate(0.7);
 }
 
 .rc-token-ring {

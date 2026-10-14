@@ -28,7 +28,7 @@ import { z } from "zod";
 import { Toaster, toast } from "sonner";
 import type { Address, Hex } from "viem";
 import {
-  connectWallet,
+  getInjectedProvider,
   publicClient,
   shortHex,
   PAYMENT_TOKENS,
@@ -53,7 +53,8 @@ import {
 } from "./newReceiptFlow";
 import TokenIcon from "../../components/TokenIcon";
 import GetEurcPanel from "../../components/GetEurcPanel";
-import AppHeader from "../../components/dashboard/AppHeader";
+import AppShell from "../../components/dashboard/AppShell";
+import { useWallet } from "../../components/dashboard/WalletContext";
 import "../../styles/app.css";
 import "./NewReceiptPage.css";
 
@@ -184,6 +185,15 @@ export default function NewReceiptPage() {
   const [buyer, setBuyer] = useState<Address | null>(null);
   const [connecting, setConnecting] = useState(false);
 
+  // Shared wallet state (app shell). The local buyer state stays the
+  // signing identity for this page's tx flow; it syncs from the shell so
+  // connecting once in the sidebar connects here too.
+  const wallet = useWallet();
+  useEffect(() => {
+    if (wallet.address) setBuyer(wallet.address);
+    else setBuyer(null);
+  }, [wallet.address]);
+
   const {
     register,
     handleSubmit,
@@ -296,8 +306,9 @@ export default function NewReceiptPage() {
   const onConnect = async () => {
     setConnecting(true);
     try {
-      const addr = await connectWallet();
-      setBuyer(addr);
+      // Shared shell wallet: Privy road when enabled, injected otherwise.
+      // The buyer syncs from wallet.address via the effect above.
+      await wallet.connect();
       toast.success("Wallet connected");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Wallet connection failed.");
@@ -305,6 +316,11 @@ export default function NewReceiptPage() {
       setConnecting(false);
     }
   };
+
+  // Honest signing gate: a Privy embedded wallet with no injected provider
+  // can't sign through this page's tx path — disable with a plain reason
+  // instead of letting the click fail.
+  const canSign = getInjectedProvider() !== null;
 
   const onSubmit = async (values: FormValues) => {
     if (!buyer) return;
@@ -400,9 +416,8 @@ export default function NewReceiptPage() {
     /already (used|taken)/i.test(fatal);
 
   return (
-    <div className="rcx rc-new">
+    <AppShell title="New receipt">
       <Toaster theme="dark" position="bottom-right" richColors />
-      <AppHeader />
       <div className="rc-new-inner">
         <Link to="/dashboard" className="rc-backlink">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -472,6 +487,7 @@ export default function NewReceiptPage() {
           <div className="rc-token-opts" role="radiogroup" aria-label="Payment token">
             {(Object.keys(PAYMENT_TOKENS) as PaymentTokenSymbol[]).map((sym) => {
               const selected = sym === tokenSymbol;
+              const cfg = PAYMENT_TOKENS[sym];
               return (
                 <button
                   key={sym}
@@ -482,15 +498,21 @@ export default function NewReceiptPage() {
                   className={`rc-token-opt${selected ? " is-selected" : ""}`}
                 >
                   <span className="rc-token-opt-icon" aria-hidden="true">
-                    <TokenIcon token={sym} size={34} />
+                    <TokenIcon token={sym} size={44} />
                   </span>
-                  <span>
+                  <span className="rc-token-opt-body">
                     <span className="rc-token-opt-name">{sym}</span>
-                    <span className="rc-token-opt-sub" style={{ display: "block" }}>
+                    <span className="rc-token-opt-sub">
                       {sym === "USDC"
                         ? "USD Coin · the default escrow instance"
                         : "Euro Coin · the second production escrow"}
                     </span>
+                    <code
+                      className="rc-token-opt-escrow"
+                      title={`Escrow contract for ${sym} (Sourcify exact_match, Arc 5042)`}
+                    >
+                      {cfg.escrow.slice(0, 10)}…{cfg.escrow.slice(-8)}
+                    </code>
                   </span>
                   <span className="rc-token-opt-check" aria-hidden="true">
                     <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#06222B" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
@@ -719,13 +741,19 @@ export default function NewReceiptPage() {
               <>
                 <button
                   type="submit"
-                  disabled={submitDisabled}
+                  disabled={submitDisabled || !canSign}
                   className="rcx-btn rcx-btn-primary"
                   style={{ minWidth: 220 }}
                 >
                   {running && <Spinner />}
                   {running ? "Opening…" : "Open receipt"}
                 </button>
+                {buyer && !canSign && (
+                  <p className="rcx-hint" style={{ marginTop: 12 }} role="note">
+                    This wallet can&apos;t sign here — connect MetaMask or
+                    Rabby to open the receipt. Nothing is half-signed.
+                  </p>
+                )}
                 {!isValid && (
                   <p className="rcx-hint" style={{ marginTop: 12 }}>
                     Fill in the highlighted fields above to continue.
@@ -836,6 +864,6 @@ export default function NewReceiptPage() {
           window and anyone can close the receipt with your {tokenSymbol} returned on-chain.
         </p>
       </div>
-    </div>
+    </AppShell>
   );
 }
