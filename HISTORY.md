@@ -236,7 +236,7 @@ Local app: API `http://127.0.0.1:3000` (`/health` ok, chain 5042, 6 indexed rece
 
 Chain status is ATTESTED. The pre-send `eth_call` on the unwrapped escrow step reported "Pre-send check passed" before the wallet prompt. MetaMask still logs `Method not supported` for `eth_signTransaction`; the wallet `eth_sendTransaction` fallback is what actually broadcast. The detail page 404'd for a few seconds because the indexer had not polled the new log yet, and the 404 path only probed V2. Retry after the poller caught up showed the receipt, with an honest "indexer says OPEN, chain says ATTESTED" banner until the cache caught the attest. The 404 path now reads both production escrows from chain before V2. Capture completed after the 300s window. Chain status `CAPTURED` (ordinal 3). capture tx `0x945755f14a09a35e0cd0c0bc65a59147b034be283f565158d66b110d3d50d959` (Memo #1274, block 26027221). The UI showed "Released to seller on-chain" and "This receipt is terminal (CAPTURED)." Pre-send check passed before the capture prompt. Print / Save as PDF button is on the receipt page (browser print dialog; not a fake export). Recorded in PROOFS.md §6.
 
-**Still open:** GitHub push, Vercel, Render, and one more open → attest → capture through the deployed frontend. Third-party volume and OIDC_RS256 stay specified-not-live.
+**Still open after this entry:** one open → attest → capture through the deployed frontend. Third-party volume and OIDC_RS256 stay specified-not-live.
 
 ---
 
@@ -257,3 +257,13 @@ What gets set:
 - **Render free web service:** the backend contract (`RPC_URL`, both escrows, deploy blocks, Memo, `PORT`, `RAINCHECK_DB_PATH=/tmp/raincheck-index.db`, `FRONTEND_URL` once the Vercel origin exists).
 
 What stays off both services: `DEPLOYER_PRIVATE_KEY`, `RENDER_API_KEY`, `VERCEL_TOKEN`, `GITHUB_TOKEN`, Groq keys, and `npm_token`. Those are local tooling only.
+
+**Shipped on `main` only.** The other GitHub branches were ancestors of `main` and were deleted. `origin` has one branch: `main`.
+
+| Host | What is live |
+|---|---|
+| GitHub | https://github.com/mohamedwael201193/RAINCHECK- (`main` @ `4b29251`) |
+| Vercel | https://raincheck-mohamedwael201193s-projects.vercel.app — Vite production build from `main`, root `frontend`. SSO login wall turned off. The built JS contains the Render API URL, both escrow addresses, and the Arc RPC. |
+| Render | https://raincheck-api-jua7.onrender.com — free web service, root `backend`, plan `free`. `/health` after the env redeploy: `ok`, chain 5042, 7 receipts, checkpoint advancing, `lastError` null. CORS origin is the Vercel URL above. |
+
+The first Vercel build failed `tsc -b` because `getTransactionCount` returns a number. Fixed with `BigInt(nonce)` and redeployed. A Render redeploy that pinned `NODE_VERSION=20` failed to typecheck `@circle-fin/smart-contract-platform` (that Node didn't install the optional package). `NODE_VERSION` was removed; the next deploy used Render's default Node and went live. A cold start hit an Arc `eth_getLogs` rate limit once, left `lastError` set, then the next poll cleared it and the cache caught back up to 7 receipts. The free instance has no disk, so the next sleep rebuilds that cache from chain.
