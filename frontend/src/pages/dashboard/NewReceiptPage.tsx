@@ -343,7 +343,7 @@ export default function NewReceiptPage() {
   // Honest signing gate: a Privy embedded wallet with no injected provider
   // can't sign through this page's tx path — disable with a plain reason
   // instead of letting the click fail.
-  const canSign = getInjectedProvider() !== null;
+  const canSign = wallet.canSign || getInjectedProvider() !== null;
 
   const onSubmit = async (values: FormValues) => {
     if (!buyer) return;
@@ -373,7 +373,7 @@ export default function NewReceiptPage() {
         escrowForFlow,
       );
       setPhase(1, "signing");
-      await signTermsWithInjected(buyer, typedData);
+      await signTermsWithInjected(buyer, typedData, wallet.provider);
       setPhase(1, "done");
 
       // 2 — Approve the escrow pull (Memo-wrapped, manual gas): the selected
@@ -383,7 +383,7 @@ export default function NewReceiptPage() {
         escrow: escrowForFlow,
       });
       setPhase(2, "signing");
-      const approveHash = await sendTxShim(approveTx, buyer);
+      const approveHash = await sendTxShim(approveTx, buyer, wallet.provider);
       setPhase(2, "pending", approveHash);
       await waitForMinedStatus1(approveHash);
       setPhase(2, "done", approveHash);
@@ -439,7 +439,7 @@ export default function NewReceiptPage() {
         setRunning(false);
         return;
       }
-      const authHash = await sendTxShim(authTx, buyer);
+      const authHash = await sendTxShim(authTx, buyer, wallet.provider);
       setPhase(3, "pending", authHash);
       await waitForMinedStatus1(authHash);
       setPhase(3, "done", authHash);
@@ -448,7 +448,12 @@ export default function NewReceiptPage() {
       toast.success("Receipt opened — redirecting…");
       navigate(`/dashboard/r/${paymentId}${isV2 ? "?protocol=v2" : ""}`);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      const msg =
+        e instanceof Error
+          ? e.message
+          : typeof e === "object" && e && "message" in e
+            ? String((e as { message: unknown }).message)
+            : "Something went wrong.";
       setFatal(msg);
       toast.error(msg);
       setSteps((prev) =>

@@ -30,6 +30,8 @@ export * from './config.js';
 
 export interface IndexerOptions {
   dbPath?: string;
+  /** Share one SQLite connection with the API. When omitted, a connection is opened. */
+  store?: IndexerStore;
   rpcUrl?: string;
   /**
    * Watched escrows with per-contract ABIs. Default: BOTH production escrows
@@ -76,7 +78,7 @@ function resolveStartBlock(opts: IndexerOptions, escrows: EscrowConfig[]): numbe
 }
 
 export function startIndexer(opts: IndexerOptions = {}): IndexerHandle {
-  const store = openStore(opts.dbPath ?? defaultDbPath());
+  const store = opts.store ?? openStore(opts.dbPath ?? defaultDbPath());
   const client = createClient(opts.rpcUrl);
   const escrows = resolveEscrows(opts);
   const intervalMs = opts.pollIntervalMs ?? POLL_INTERVAL_MS;

@@ -1,9 +1,12 @@
 import "dotenv/config";
 import type { Express } from "express";
-import { ChainLogReceiptStore, EURC_FROM_BLOCK } from "./chainStore.js";
+import { ChainLogReceiptStore } from "./chainStore.js";
 import { createApp as buildApiApp } from "./app.js";
 import { createB2Source, type B2StoreLike } from "./ports.js";
-import { ESCROW_ADDRESS, ESCROW_ADDRESS_EURC } from "../config.js";
+import { CHAIN_ID, ESCROW_ADDRESS, ESCROW_ADDRESS_EURC, EURC_ADDRESS, EXPLORER, MEMO_ADDRESS, USDC_ADDRESS } from "../config.js";
+import { defaultDbPath } from "../indexer/config.js";
+import { startIndexer } from "../indexer/index.js";
+import { openStore } from "../indexer/store.js";
 import type { ReceiptSource } from "./types.js";
 
 /**
@@ -25,12 +28,10 @@ import type { ReceiptSource } from "./types.js";
  * Multi-asset: both production escrow instances are indexed by default
  * (one instance per token). Set ESCROW_ADDRESS_EURC="" to watch USDC only.
  *
- * STORE SELECTION: B2's indexer (backend/src/indexer/) is still landing and
- * does not compile yet under the repo's CommonJS tsconfig, so today the API
- * re-derives receipts straight from eth_getLogs (ChainLogReceiptStore) — the
- * chain is the source of truth, so this is correct, not a fallback hack. To
- * switch to B2's SQLite cache once it compiles: pass its IndexerStore into
- * createB2Source() and hand the result to createApp(). See ports.ts.
+ * STORE SELECTION: npm start boots the SQLite indexer (backend/src/indexer/)
+ * and serves it through createB2Source(). The chain remains the source of
+ * truth — the DB is a cache rebuilt from eth_getLogs. ChainLogReceiptStore
+ * stays available for a direct log rebuild. See ports.ts.
  *
  * The initial chain scan is best-effort: if the RPC is unreachable the API
  * still starts and serves an empty (honest) dataset rather than fake data.
@@ -50,30 +51,61 @@ export function createAppFromB2(b2: B2StoreLike): Express {
 /** Boot the receipt API server. */
 export async function start(): Promise<void> {
   const port = Number(process.env.PORT ?? "3000");
-  const escrowAddress = process.env.ESCROW_ADDRESS ?? ESCROW_ADDRESS;
-  const fromBlock = BigInt(process.env.ESCROW_DEPLOY_BLOCK ?? "25956323");
-  const escrowAddressEurc = (process.env.ESCROW_ADDRESS_EURC ?? ESCROW_ADDRESS_EURC).trim();
-  const fromBlockEurc = BigInt(process.env.ESCROW_DEPLOY_BLOCK_EURC ?? String(EURC_FROM_BLOCK));
+  const dbPath = defaultDbPath();
+  // One SQLite connection shared by the poller and the API. The chain is the
+  // source of truth; this file is a cache and is rebuilt from eth_getLogs.
+  const store = openStore(dbPath);
+  const source = createB2Source(store);
+  const indexer = startIndexer({ store });
 
-  const escrows = [{ address: escrowAddress, fromBlock }];
-  if (escrowAddressEurc) {
-    escrows.push({ address: escrowAddressEurc, fromBlock: fromBlockEurc });
-  }
-  const store = new ChainLogReceiptStore({ escrows });
-  try {
-    await store.refresh();
-    const n = (await store.listReceipts()).length;
-    console.log(
-      `[api] indexed ${n} receipts from chain logs (escrows ${escrows.map((e) => e.address).join(", ")})`,
-    );
-  } catch (err) {
-    console.warn(
-      `[api] initial chain scan failed (${(err as Error).message}); serving empty dataset until refresh succeeds`,
-    );
-  }
+  const app = createApp(source);
+  app.get("/health", (_req, res) => {
+    const state = indexer.getState();
+    res.json({
+      ok: true,
+      chainId: CHAIN_ID,
+      receipts: state.receipts,
+      checkpoint: state.checkpoint,
+      lastError: state.lastError ?? null,
+    });
+  });
+  app.get("/config", (_req, res) => {
+    res.json({
+      chainId: CHAIN_ID,
+      explorer: EXPLORER,
+      escrow: process.env.ESCROW_ADDRESS ?? ESCROW_ADDRESS,
+      escrowEurc: process.env.ESCROW_ADDRESS_EURC ?? ESCROW_ADDRESS_EURC,
+      memo: MEMO_ADDRESS,
+      usdc: USDC_ADDRESS,
+      eurc: EURC_ADDRESS,
+    });
+  });
 
-  const app = createApp(store);
   app.listen(port, () => {
-    console.log(`[api] RAINCHECK receipt API listening on :${port}`);
+    console.log(`[api] RAINCHECK receipt API listening on :${port} (db ${dbPath})`);
+  });
+
+  // The first poll runs inside startIndexer. Log progress so a cold boot
+  // (backfill from the deploy blocks) is visible, and never block listen —
+  // Render's health check must answer while the backfill is still walking.
+  const report = () => {
+    const state = indexer.getState();
+    console.log(
+      `[api] index receipts=${state.receipts} checkpoint=${state.checkpoint ?? "none"}${state.lastError ? ` error=${state.lastError}` : ""}`,
+    );
+  };
+  setTimeout(report, 5_000);
+  setInterval(report, 30_000);
+}
+
+// `node dist/api/server.js` — the npm start entry. Importing this module from
+// tests does not happen; the listen stays behind this direct-run check so a
+// test import can never bind a port.
+const invokedDirectly = process.argv[1]?.replace(/\\/g, "/").endsWith("/api/server.js")
+  || process.argv[1]?.replace(/\\/g, "/").endsWith("/api/server.ts");
+if (invokedDirectly) {
+  start().catch((err) => {
+    console.error(`[api] failed to start: ${(err as Error).message}`);
+    process.exit(1);
   });
 }

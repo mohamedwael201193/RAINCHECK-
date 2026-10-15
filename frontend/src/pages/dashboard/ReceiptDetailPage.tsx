@@ -58,6 +58,7 @@ import {
   tokenSymbolForEscrow,
   txUrl,
   UserRejectedError,
+  ESCROW_ADDRESS_EURC,
   V2_ESCROW_ADDRESS,
 } from "../../lib/chain";
 import "./ReceiptDetailPage.css";
@@ -420,6 +421,41 @@ export default function ReceiptDetailPage() {
     setLoad({ kind: "ready", receipt: detail });
   }, [paymentId, validId]);
 
+  /**
+   * Indexer 404 is not proof the receipt is missing — a just-mined V1
+   * authorize can land before the poller. Chain is the source of truth, so
+   * probe both production escrows before calling it missing.
+   */
+  const loadV1FromChain = useCallback(async () => {
+    if (!validId || !paymentId) return;
+    const candidates = [ESCROW_ADDRESS, ESCROW_ADDRESS_EURC];
+    for (const escrow of candidates) {
+      const view = await readReceiptFromChain(paymentId as `0x${string}`, escrow);
+      if (view.statusName === "NONE" || view.statusName === "UNKNOWN") continue;
+      setEscrowAddr(escrow);
+      setIsV2Receipt(false);
+      const detail: ReceiptDetail = {
+        paymentId,
+        status: view.statusName,
+        buyer: view.buyer,
+        seller: view.seller,
+        amount: view.amount.toString(),
+        deadline: Number(view.deadline),
+        termsHash: view.termsHash,
+        outputHash: view.outputHash === ZERO32 ? undefined : view.outputHash,
+        attestedAt: view.attestedAt > 0n ? Number(view.attestedAt) : undefined,
+        flagReasonHash:
+          view.flagReasonHash === ZERO32 ? undefined : view.flagReasonHash,
+        timeline: [],
+        escrow,
+        token: tokenSymbolForEscrow(escrow) ?? undefined,
+      };
+      setLoad({ kind: "ready", receipt: detail });
+      return;
+    }
+    throw new Error("No receipt with this paymentId on the production escrows.");
+  }, [paymentId, validId]);
+
   // --- load receipt from the indexer API -----------------------------------
   const loadReceipt = useCallback(async () => {
     if (!validId) {
@@ -454,8 +490,14 @@ export default function ReceiptDetailPage() {
         headers: { accept: "application/json" },
       });
       if (res.status === 404) {
-        // The indexer doesn't track V2 — probe the experimental escrow
-        // before declaring the receipt missing.
+        // A just-mined V1 receipt can 404 before the poller. Chain first,
+        // then the experimental escrow the indexer does not track.
+        try {
+          await loadV1FromChain();
+          return;
+        } catch {
+          /* not on a production escrow */
+        }
         try {
           await loadV2FromChain();
           return;
@@ -465,7 +507,7 @@ export default function ReceiptDetailPage() {
         setLoad({
           kind: "not-found",
           message:
-            "No receipt with this paymentId in the indexer or on the V2 escrow. It may not exist on-chain, or the indexer has not caught up yet.",
+            "No receipt with this paymentId on the production escrows, the V2 escrow, or in the indexer.",
         });
         return;
       }
@@ -486,7 +528,7 @@ export default function ReceiptDetailPage() {
         message: `Could not load the receipt: ${err instanceof Error ? err.message : String(err)}`,
       });
     }
-  }, [paymentId, validId, forceV2, loadV2FromChain]);
+  }, [paymentId, validId, forceV2, loadV2FromChain, loadV1FromChain]);
 
   useEffect(() => {
     void loadReceipt();
@@ -599,7 +641,7 @@ export default function ReceiptDetailPage() {
   const sendAction = useCallback(
     async (preview: ActionTxPreview) => {
       if (!validId || !wallet) return;
-      const provider = getInjectedProvider();
+      const provider = shellWallet.provider ?? getInjectedProvider();
       if (!provider) {
         const msg = "No wallet provider found.";
         setActionError(msg);

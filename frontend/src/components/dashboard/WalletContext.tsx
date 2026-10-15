@@ -8,8 +8,14 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useAppKit, useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { PRIVY_ENABLED } from "../../lib/privy";
-import { connectWallet, getInjectedProvider } from "../../lib/chain";
+import { REOWN_ENABLED } from "../../lib/reown";
+import {
+  connectWallet,
+  getInjectedProvider,
+  type EthereumProvider,
+} from "../../lib/chain";
 
 /**
  * The ONE wallet state for the whole app shell.
@@ -27,8 +33,10 @@ import { connectWallet, getInjectedProvider } from "../../lib/chain";
 
 export interface WalletState {
   address: `0x${string}` | null;
-  /** "privy" | "injected" — which road connected this session. */
-  source: "privy" | "injected" | null;
+  /** Which road connected this session. */
+  source: "privy" | "injected" | "reown" | null;
+  /** EIP-1193 provider that will sign. Null until a wallet is connected. */
+  provider: EthereumProvider | null;
   connecting: boolean;
   lastError: string | null;
   /** True when the connected wallet can sign via window.ethereum. */
@@ -91,6 +99,7 @@ function PrivyWalletProvider({ children }: { children: ReactNode }) {
     () => ({
       address: authenticated ? address : null,
       source: authenticated ? "privy" : null,
+      provider: authenticated ? getInjectedProvider() : null,
       connecting: connecting || !ready,
       lastError,
       canSign,
@@ -154,6 +163,7 @@ function InjectedWalletProvider({ children }: { children: ReactNode }) {
     () => ({
       address,
       source: address ? "injected" : null,
+      provider: address ? getInjectedProvider() : null,
       connecting,
       lastError,
       canSign: !!address && !!getInjectedProvider(),
@@ -168,9 +178,61 @@ function InjectedWalletProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/* ---------------- Reown road (AppKit modal) ----------------------------- */
+
+function ReownWalletProvider({ children }: { children: ReactNode }) {
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
+  const { walletProvider } = useAppKitProvider("eip155");
+  const [connecting, setConnecting] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
+
+  const provider = (walletProvider ?? null) as EthereumProvider | null;
+  const connected = isConnected && !!address ? (address as `0x${string}`) : null;
+
+  const connect = useCallback(async () => {
+    setLastError(null);
+    setConnecting(true);
+    try {
+      await open({ view: "Connect" });
+    } catch (e) {
+      setLastError(e instanceof Error ? e.message : "Wallet connection failed.");
+      throw e;
+    } finally {
+      setConnecting(false);
+    }
+  }, [open]);
+
+  const disconnect = useCallback(() => {
+    setLastError(null);
+    void open({ view: "Account" });
+  }, [open]);
+
+  const value = useMemo<WalletState>(
+    () => ({
+      address: connected,
+      source: connected ? "reown" : null,
+      provider: connected ? provider : null,
+      connecting,
+      lastError,
+      canSign: !!connected && !!provider,
+      connect,
+      disconnect,
+    }),
+    [connected, provider, connecting, lastError, connect, disconnect],
+  );
+
+  return (
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+  );
+}
+
 /* ---------------- public provider --------------------------------------- */
 
 export function WalletProvider({ children }: { children: ReactNode }) {
+  if (REOWN_ENABLED) {
+    return <ReownWalletProvider>{children}</ReownWalletProvider>;
+  }
   if (PRIVY_ENABLED) {
     return <PrivyWalletProvider>{children}</PrivyWalletProvider>;
   }

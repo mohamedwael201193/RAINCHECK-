@@ -1,12 +1,15 @@
 /**
  * Arc transaction transport — the TWO mandatory Arc workarounds (bible §9.1).
  *
- * Workaround #1: NEVER use eth_sendTransaction on Arc — the chain returns 401
- * (per-chain auth). Sign locally via eth_signTransaction, then broadcast the
- * raw signed tx yourself with eth_sendRawTransaction to our own RPC
- * (https://rpc.mainnet.arc.io). No fallback to eth_sendTransaction: a wallet
- * that cannot eth_signTransaction cannot transact on Arc through this app,
- * and the UI must say exactly that.
+ * Workaround #1: NEVER call eth_sendTransaction on the Arc RPC — the node
+ * returns 401 (per-chain auth). Prefer eth_signTransaction, then broadcast
+ * the raw signed tx with eth_sendRawTransaction to our own RPC
+ * (https://rpc.mainnet.arc.io). MetaMask does not implement
+ * eth_signTransaction. For that wallet only, ask the wallet's own
+ * eth_sendTransaction: MetaMask signs locally and broadcasts with
+ * eth_sendRawTransaction. That is not the Arc node's eth_sendTransaction.
+ * The manual gas limit is always passed so the wallet does not
+ * eth_estimateGas (Memo reverts under estimation).
  *
  * Workaround #2: Privy's EIP-712 signing endpoint expects the typed-data
  * payload's primary-type field as snake_case `primary_type` — NOT camelCase
@@ -68,10 +71,49 @@ function isMethodMissing(err: unknown): boolean {
 }
 
 /**
+ * Wallet broadcast for providers that lack eth_signTransaction (MetaMask).
+ * This calls the wallet, not the Arc node. gas is included so the wallet
+ * does not eth_estimateGas.
+ */
+async function sendViaWallet(
+  provider: SignerProvider,
+  tx: UnsignedArcTx,
+): Promise<Hex> {
+  let hash: string;
+  try {
+    hash = (await provider.request({
+      method: "eth_sendTransaction",
+      params: [
+        {
+          from: tx.from,
+          to: tx.to,
+          data: tx.data,
+          value: toHex(tx.value ?? 0n),
+          gas: toHex(tx.gas),
+        },
+      ],
+    })) as string;
+  } catch (err) {
+    if (isUserRejection(err)) throw new UserRejectedError();
+    const message =
+      err instanceof Error
+        ? err.message
+        : typeof err === "object" && err && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "The wallet rejected the transaction.";
+    throw new ArcSignError(message);
+  }
+  if (typeof hash !== "string" || !hash.startsWith("0x")) {
+    throw new ArcSignError("Wallet did not return a transaction hash.");
+  }
+  return hash as Hex;
+}
+
+/**
  * Sign via eth_signTransaction and broadcast the raw tx with
  * eth_sendRawTransaction to our own Arc RPC. Returns the tx hash.
- * Throws ArcSignError (with a UI-safe message) when the wallet does not
- * support eth_signTransaction — there is no eth_sendTransaction fallback.
+ * Wallets without eth_signTransaction (MetaMask) fall through to the
+ * wallet's eth_sendTransaction, which signs locally and broadcasts raw.
  */
 export async function signAndBroadcastArc(
   provider: SignerProvider,
@@ -98,13 +140,7 @@ export async function signAndBroadcastArc(
     })) as string;
   } catch (err) {
     if (isUserRejection(err)) throw new UserRejectedError();
-    if (isMethodMissing(err)) {
-      throw new ArcSignError(
-        "This wallet does not support eth_signTransaction, which Arc requires " +
-          "(Arc rejects eth_sendTransaction with 401). Connect MetaMask, Rabby, " +
-          "or a Privy embedded wallet instead.",
-      );
-    }
+    if (isMethodMissing(err)) return sendViaWallet(provider, tx);
     throw err;
   }
   if (typeof signed !== "string" || !signed.startsWith("0x")) {
@@ -155,11 +191,11 @@ function getInjectedProvider(): SignerProvider | null {
 /**
  * F1 contract: sendTx(tx: BuiltTx) => Promise<txHash string>.
  *
- * Signs with eth_signTransaction (NEVER eth_sendTransaction — Arc answers 401,
- * bible §9.1 workaround #1) and broadcasts the raw tx to our own RPC via
- * eth_sendRawTransaction. The manual gas limit comes from the BuiltTx (Memo
- * txs revert under estimation). The signer defaults to the injected wallet;
- * pass opts.provider/opts.from for Privy embedded wallets.
+ * Prefers eth_signTransaction plus our own eth_sendRawTransaction (the Arc
+ * node rejects eth_sendTransaction with 401). MetaMask lacks
+ * eth_signTransaction, so signAndBroadcastArc falls back to the wallet
+ * method, still passing the manual gas limit. The signer defaults to the
+ * injected wallet; pass opts.provider/opts.from for Privy or Reown.
  */
 export async function sendTx(
   built: BuiltTx,

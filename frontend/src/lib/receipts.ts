@@ -51,11 +51,17 @@ export const STATUS_MEANING: Record<ReceiptStatus, string> = {
 };
 
 export function apiBase(): string | null {
-  // Safe access: works with or without vite/client types installed.
+  // KEEP the `(import.meta as {...}).env` member access literal on this line:
+  // Vite only injects import.meta.env when it sees that exact shape.
   const env = (import.meta as { env?: Record<string, unknown> }).env ?? {};
-  const base = String(env.VITE_API_URL ?? "")
-    .trim()
-    .replace(/\/+$/, "");
+  const fromMeta = typeof env.VITE_API_URL === "string" ? env.VITE_API_URL : "";
+  // Vitest 2.1 `vi.stubEnv` writes process.env only — import.meta.env is not
+  // updated — so tests (and any non-Vite runner) are read from here second.
+  const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+    .process;
+  const fromProcess =
+    typeof proc?.env?.VITE_API_URL === "string" ? proc.env.VITE_API_URL : "";
+  const base = (fromMeta || fromProcess).trim().replace(/\/+$/, "");
   return base || null;
 }
 

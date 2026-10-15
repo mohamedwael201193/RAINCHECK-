@@ -137,7 +137,26 @@ EURC suite net principal ≈ 0 (deployer is buyer+sellers; all dust refunded/voi
 ## 4. Off-chain suites
 
 - **Backend:** 57/57 pass (vitest-style node:test suite; receipt + webhook-verify tests).
-- **Frontend:** 78/78 pass (lib/utils + component tests).
+- **Frontend:** 155/155 pass (re-run 2026-10-15 on this machine; `tsc --noEmit` clean). Backend 57/57. Contracts `forge test` 60/60.
+
+## 6. Browser dust lifecycle — 2026-10-15, user's Chrome, local app
+
+First-party self-deal, disclosed in the UI ("you are the buyer" and "you are the seller"). Wallet `0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3` confirmed every prompt in MetaMask via Reown. V1 USDC escrow. 0.001 USDC (1000 base units). paymentId `0x208570faa8d6cecd4bb319210111006ae8daff227ec7d208fc216fa09f8ac39d`.
+
+Delivered bytes (UTF-8), hashed in the page and recomputed locally to the same digest: `RAINCHECK publish dust: a one-page delivery note whose exact bytes will be sha256-attested on Arc mainnet.`
+
+outputHash `0x39b446fc3c1d7fa464748853a8d6eb89d40e98dc3f10adfb18a6797e8e73a4d3`. Chain status after capture: `CAPTURED` (ordinal 3). Escrow balance for this paymentId is settled.
+
+| Step | Tx | Block |
+|---|---|---|
+| approve | [`0x24f1f48477396cb6e441a216260cf5075ee80a4466add27c4b6eba44a0bd2031`](https://explorer.arc.io/tx/0x24f1f48477396cb6e441a216260cf5075ee80a4466add27c4b6eba44a0bd2031) | 26026049 |
+| authorize (Memo #1272) | [`0x4eb2cf5cb6316a14d4537d553317a3f64db76e2a644cbbc7f53726b1dd32f8fe`](https://explorer.arc.io/tx/0x4eb2cf5cb6316a14d4537d553317a3f64db76e2a644cbbc7f53726b1dd32f8fe) | 26026063 |
+| attestDelivery (Memo #1273) | [`0x1be41bdf15c2ee96add354cb12c8b34bc4f56b8507d16deed8f363149ec8e8bf`](https://explorer.arc.io/tx/0x1be41bdf15c2ee96add354cb12c8b34bc4f56b8507d16deed8f363149ec8e8bf) | 26026505 |
+| capture (Memo #1274) | [`0x945755f14a09a35e0cd0c0bc65a59147b034be283f565158d66b110d3d50d959`](https://explorer.arc.io/tx/0x945755f14a09a35e0cd0c0bc65a59147b034be283f565158d66b110d3d50d959) | 26027221 |
+
+Pre-send `eth_call` (unwrapped escrow step) passed in the UI before both attest and capture. MetaMask does not implement `eth_signTransaction`; the app falls back to the wallet's `eth_sendTransaction`, which signs locally and broadcasts with `eth_sendRawTransaction`. The Arc node method still 401s and is not called.
+
+This proof is local (`http://127.0.0.1:5174`). The deployed-frontend repeat is not done yet. Third-party volume is still zero. OIDC_RS256 is still specified-not-live.
 
 ## 5. HONESTY — PROVEN vs SPECIFIED-NOT-LIVE
 
@@ -154,7 +173,7 @@ EURC suite net principal ≈ 0 (deployer is buyer+sellers; all dust refunded/voi
 **SPECIFIED — NOT YET LIVE:**
 - **T0-O OIDC_RS256 tier:** registration is allowed on OracleRegistry (kind recorded honestly) but every verification path reverts "OIDC not live" — RS256 verification never deployed, no mainnet txs.
 - **Oracle→escrow wire-up:** `OraclePolicy` modes (ORACLE_ONLY/ORACLE_PREFERRED) and `attestWithOracle` capture gates are bible §4.5 spec — no escrow contract consumes oracle attestations yet.
-- **V2 in the production app:** contract proven on mainnet but experimental — unwired in the UI, not audited, explicitly "do NOT integrate."
+- **V2 in the production app:** the new-receipt screen offers V2 as an explicit experimental, unaudited opt-in. The 2026-10-15 browser proof used V1. V2 is not the production path and is not audited.
 - **In-app CCTP execution:** guide only — contract-initiated CCTP burns are chain-gated on Arc (proven with minimal test contracts); direct EOA burns work.
 - **Circle Onramp Kit:** mentioned as a fiat fallback only — no integration executed.
 - **Third-party volume:** zero. All proofs are first-party dust; no real buyer/seller has used the product.

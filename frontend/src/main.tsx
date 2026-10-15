@@ -1,10 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider, type Config as WagmiConfig } from "wagmi";
 import { PrivyProvider } from "@privy-io/react-auth";
 import App from "./App";
 import { WalletProvider } from "./components/dashboard/WalletContext";
 import "./index.css";
 import { arc } from "./lib/chain";
+import { PRIVY_ENABLED } from "./lib/privy";
+import { queryClient, REOWN_ENABLED, wagmiAdapter } from "./lib/reown";
 
 // Privy App ID is a PUBLIC identifier (NEXT_PUBLIC_/VITE_ by design) —
 // never a secret. Never put private keys in env.
@@ -32,7 +36,16 @@ function Root() {
     </WalletProvider>
   );
 
-  if (!PRIVY_APP_ID) {
+  if (REOWN_ENABLED && wagmiAdapter) {
+    const config = wagmiAdapter.wagmiConfig as unknown as WagmiConfig;
+    return (
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>{app}</QueryClientProvider>
+      </WagmiProvider>
+    );
+  }
+
+  if (!PRIVY_ENABLED) {
     if (import.meta.env.DEV) {
       console.warn(
         "[raincheck] VITE_PRIVY_APP_ID is not set — running without Privy. " +
@@ -44,7 +57,7 @@ function Root() {
 
   return (
     <PrivyProvider
-      appId={PRIVY_APP_ID}
+      appId={PRIVY_APP_ID ?? ""}
       config={{
         // Bible §9.1: wallet (injected: MetaMask, Rabby, Coinbase Wallet) + email/SMS embedded.
         loginMethods: ["wallet", "email", "sms"],

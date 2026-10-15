@@ -18,6 +18,11 @@ coverage/
 # logs
 *.log
 
+# indexer cache (rebuilt from chain logs; never a source of truth)
+*.db
+*.db-wal
+*.db-shm
+
 # local environment files (real secrets live here — never commit)
 .env
 .env.local

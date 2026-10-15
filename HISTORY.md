@@ -193,3 +193,47 @@ Evidence: `evidence/e2e-eurc.json`.
 | **Principal lost in all tests** | **0** — every escrow ended at zero balance; all dust refunded or captured to the seller |
 
 All gas paid in USDC (Arc's native 18-decimal gas token). No user funds ever touched: every test used the deployer's own dust, with the deployer acting as buyer and seller.
+
+---
+
+## 12. 2026-10-15 — publish session (local gates, then wallet)
+
+Bundle `raincheck-build.bundle` SHA-256 `46b417196cf4feb678e206d037b89d7230a62128128d653d8df1d0b929be447a` matches the expected prefix `46b417196cf4feb6`. Cloned to `raincheck/`. Gates re-run on this machine:
+
+| Gate | Result |
+|---|---|
+| `contracts && forge test` | **60/60** |
+| `backend && npm test` | **57/57** |
+| `frontend && npx tsc --noEmit` | clean after the two fixes below |
+| `frontend && npm test` | **155/155** after the receipt-client fix |
+| `frontend && npm run build` | succeeded |
+
+**Fixes (this session, before any deploy):**
+
+1. **Frontend tests 152/155.** `fetchReceipts` read `import.meta.env.VITE_API_URL` only. Vitest 2.1 `vi.stubEnv` writes `process.env` and does not update `import.meta.env`, so three amount-coercion tests threw "VITE_API_URL is not set". `apiBase()` now prefers the Vite value and falls back to `process.env.VITE_API_URL`. Browser behavior is unchanged when Vite injects the variable.
+2. **`tsc --noEmit` TS6305.** `vite.config.ts` was in both the root program and the composite `tsconfig.node.json`. Root `include` is now `src` only; `tsc -b` still typechecks the Vite config.
+3. **`npm start` did not serve receipts.** `backend/src/server.ts` only exposed `/health` and `/config`. The receipt API and SQLite indexer already existed and were unmounted. `npm start` / `npm run dev` now boot `dist/api/server.js`: one SQLite connection shared by the poller and `createB2Source()`, `/health` answers immediately while the backfill walks, `/config` lists both production escrows. `defaultDbPath()` uses `fileURLToPath` so Windows does not hand better-sqlite3 a `/D:/...` path. `*.db` is gitignored. Local boot against Arc mainnet indexed **6 live receipts** (USDC + EURC, statuses matching chain). No invented rows.
+4. **Wallet.** A Privy app id borrowed from another product was rejected in the user's Chrome: `auth.privy.io` frame-ancestors allow only `till-0g.vercel.app`. That id was removed and never committed. The founder supplied a **Reown project id** (public, gitignored `frontend/.env` as `VITE_REOWN_PROJECT_ID`, not in git). Connect now opens the Reown modal on Arc 5042 when that variable is set. Signing is unchanged: `eth_signTransaction` + `eth_sendRawTransaction` to `https://rpc.mainnet.arc.io`. Privy remains the fallback only when Reown is unset and a real `VITE_PRIVY_APP_ID` is set.
+
+**Still open at the end of this entry:** the in-browser dust lifecycle (user confirms in the wallet), GitHub push, Vercel, Render, and the post-deploy repeat of open → attest → capture. Third-party volume and the OIDC_RS256 tier stay specified-not-live. No fake receipts.
+
+---
+
+## 13. 2026-10-15 — wallet dust open, two real failures, then a send-path fix
+
+Local app: API `http://127.0.0.1:3000` (`/health` ok, chain 5042, 6 indexed receipts, checkpoint advancing, `lastError` null). Vite `http://127.0.0.1:5174` (5173 is Hallpass). Reown connected in the user's Chrome as `0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3`. Form: self-deal, 0.001 USDC, V1 production escrow, deadline the next morning. Nothing was broadcast on either failed attempt.
+
+1. **Terms signature rejected by MetaMask: `Invalid input`.** `eth_signTypedData_v4` was sent `{...typedData, primaryType}` and the payload still contained snake_case `primary_type`. MetaMask's schema is `additionalProperties: false`. `signTermsWithInjected` now strips `primary_type` and sends `primaryType` only. Non-Error RPC objects are surfaced by their `message` instead of "Something went wrong."
+2. **Approve rejected by MetaMask: `Method not supported`.** The terms signature succeeded (the failure stack is `sendTxShim` → `NewReceiptPage` approve, not the typed-data call). MetaMask does not implement `eth_signTransaction`. The Arc **node** `eth_sendTransaction` still 401s; the **wallet** method does not — MetaMask signs locally and broadcasts with `eth_sendRawTransaction`. `signAndBroadcastArc` now falls through to the wallet method when `eth_signTransaction` is missing, and still passes the manual gas limit so the wallet does not `eth_estimateGas`. `sendTxShim` delegates to that function. Receipt detail already had this fallback in `chain.ts` `signAndBroadcast`. UI copy that told MetaMask users to "connect MetaMask" was wrong and is gone.
+
+**Dust receipt opened and attested (user confirmed in MetaMask).** Self-deal, 0.001 USDC, V1 production escrow `0x97f233865ae84DC7475F6D7CA404930654580CB5`. paymentId `0x208570faa8d6cecd4bb319210111006ae8daff227ec7d208fc216fa09f8ac39d`. Delivered bytes (UTF-8): `RAINCHECK publish dust: a one-page delivery note whose exact bytes will be sha256-attested on Arc mainnet.` outputHash `0x39b446fc3c1d7fa464748853a8d6eb89d40e98dc3f10adfb18a6797e8e73a4d3` (recomputed locally, matches chain).
+
+| Step | Tx |
+|---|---|
+| approve (1000 base units to the escrow) | `0x24f1f48477396cb6e441a216260cf5075ee80a4466add27c4b6eba44a0bd2031` |
+| authorize / RaincheckOpened, Memo #1272, block 26026063 | `0x4eb2cf5cb6316a14d4537d553317a3f64db76e2a644cbbc7f53726b1dd32f8fe` |
+| attestDelivery, block 26026505, attestedAt 1792033794 | `0x1be41bdf15c2ee96add354cb12c8b34bc4f56b8507d16deed8f363149ec8e8bf` |
+
+Chain status is ATTESTED. The pre-send `eth_call` on the unwrapped escrow step reported "Pre-send check passed" before the wallet prompt. MetaMask still logs `Method not supported` for `eth_signTransaction`; the wallet `eth_sendTransaction` fallback is what actually broadcast. The detail page 404'd for a few seconds because the indexer had not polled the new log yet, and the 404 path only probed V2. Retry after the poller caught up showed the receipt, with an honest "indexer says OPEN, chain says ATTESTED" banner until the cache caught the attest. The 404 path now reads both production escrows from chain before V2. Capture completed after the 300s window. Chain status `CAPTURED` (ordinal 3). capture tx `0x945755f14a09a35e0cd0c0bc65a59147b034be283f565158d66b110d3d50d959` (Memo #1274, block 26027221). The UI showed "Released to seller on-chain" and "This receipt is terminal (CAPTURED)." Pre-send check passed before the capture prompt. Print / Save as PDF button is on the receipt page (browser print dialog; not a fake export). Recorded in PROOFS.md §6.
+
+**Still open:** GitHub push, Vercel, Render, and one more open → attest → capture through the deployed frontend. Third-party volume and OIDC_RS256 stay specified-not-live.

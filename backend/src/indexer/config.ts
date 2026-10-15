@@ -10,6 +10,7 @@
  *
  * Source of truth: ~/workspace/your_files/raincheck-build-bible.md (§§3, 4.1, 4.2, 5.4).
  */
+import { fileURLToPath } from 'node:url';
 import { keccak256, toHex, type Abi, type AbiEvent } from 'viem';
 import {
   CHAIN_ID,
@@ -241,8 +242,10 @@ export const TRANSFER_LOG_ADDRESSES = [
 
 /** Default DB path (backend/raincheck-index.db). Overridable via RAINCHECK_DB_PATH. */
 export function defaultDbPath(): string {
-  return (
-    process.env.RAINCHECK_DB_PATH ??
-    new URL('../../raincheck-index.db', import.meta.url).pathname
-  );
+  if (process.env.RAINCHECK_DB_PATH && process.env.RAINCHECK_DB_PATH.trim()) {
+    return process.env.RAINCHECK_DB_PATH.trim();
+  }
+  // fileURLToPath, not URL.pathname: on Windows pathname is "/D:/..." which
+  // better-sqlite3 cannot open.
+  return fileURLToPath(new URL('../../raincheck-index.db', import.meta.url));
 }

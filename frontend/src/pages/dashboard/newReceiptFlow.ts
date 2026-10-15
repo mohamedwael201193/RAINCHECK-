@@ -5,9 +5,9 @@
  *  - the paymentId scheme (task requirement, documented below)
  *  - EIP-712 signing via the injected wallet (primary_type -> primaryType
  *    mapping for eth_signTypedData_v4; bible §9.1 workaround #2)
- *  - a temporary sendTx shim with EXACTLY the contract F1's src/lib/sendTx.ts
- *    documents: sendTx(tx: BuiltTx) -> Promise<txHash>, eth_signTransaction +
- *    eth_sendRawTransaction to our own RPC (bible §9.1 workaround #1)
+ *  - a temporary sendTx shim that delegates to F1's signAndBroadcastArc:
+ *    eth_signTransaction + eth_sendRawTransaction, with a MetaMask fallback
+ *    to the wallet's eth_sendTransaction (the Arc node method still 401s)
  *  - mined-receipt polling (status 1 ONLY counts as success)
  *  - buyer balance reads (native 18dp + ERC-20 6dp)
  *
@@ -28,7 +28,8 @@ import {
   type Address,
   type Hex,
 } from "viem";
-import { publicClient, RPC_URL, CHAIN_ID } from "../../lib/chain";
+import { publicClient } from "../../lib/chain";
+import { signAndBroadcastArc } from "../../lib/sendTx";
 import { USDC_ADDRESS, type BuiltTx, type PrivyTypedData } from "../../lib/tx";
 
 // ---------------------------------------------------------------------------
@@ -87,7 +88,7 @@ export function randomSalt(): Hex {
 // ---------------------------------------------------------------------------
 
 interface InjectedEthereum {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  request: (args: { method: string; params?: unknown }) => Promise<unknown>;
 }
 
 function getInjected(): InjectedEthereum {
@@ -96,26 +97,45 @@ function getInjected(): InjectedEthereum {
   return w.ethereum;
 }
 
+function resolveEth(provider?: InjectedEthereum | null): InjectedEthereum {
+  if (provider) return provider;
+  return getInjected();
+}
+
 /**
- * Sign F8's PrivyTypedData with the injected wallet.
+ * Sign F8's PrivyTypedData with the connected wallet.
  *
  * SNAKE_CASE NOTE (bible §9.1 workaround #2): Privy's own signing endpoint
  * expects `primary_type` (snake_case). The generic JSON-RPC method
  * eth_signTypedData_v4 expects `primaryType` (camelCase) — MetaMask/Rabby
- * will not find the primary type otherwise. This maps it for the injected
- * path only. When F1's Privy provider lands, pass `typedData` to Privy
- * UNCHANGED (snake_case).
+ * will not find the primary type otherwise. This maps it for the wallet
+ * path. Pass the Reown/AppKit provider when that road is connected.
  */
 export async function signTermsWithInjected(
   buyer: Address,
   typedData: PrivyTypedData,
+  provider?: InjectedEthereum | null,
 ): Promise<Hex> {
-  const eth = getInjected();
-  const payload = { ...typedData, primaryType: typedData.primary_type };
-  const sig = (await eth.request({
-    method: "eth_signTypedData_v4",
-    params: [buyer, JSON.stringify(payload)],
-  })) as string;
+  const eth = resolveEth(provider);
+  // eth_signTypedData_v4 rejects unknown keys. The stored payload keeps
+  // snake_case primary_type for Privy; the wallet call sends primaryType only.
+  const { primary_type, ...rest } = typedData;
+  const payload = { ...rest, primaryType: primary_type };
+  let sig: string;
+  try {
+    sig = (await eth.request({
+      method: "eth_signTypedData_v4",
+      params: [buyer, JSON.stringify(payload)],
+    })) as string;
+  } catch (err) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : typeof err === "object" && err && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "The wallet rejected the terms signature.";
+    throw new Error(message);
+  }
   if (!sig || !sig.startsWith("0x"))
     throw new Error("The wallet did not return a signature.");
   return sig as Hex;
@@ -125,56 +145,30 @@ export async function signTermsWithInjected(
 // sendTx shim — DELETE when F1's src/lib/sendTx.ts lands
 // ---------------------------------------------------------------------------
 
-async function broadcastRaw(signedRawTx: Hex): Promise<Hex> {
-  const res = await fetch(RPC_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: 1,
-      method: "eth_sendRawTransaction",
-      params: [signedRawTx],
-    }),
-  });
-  const json = (await res.json()) as {
-    result?: Hex;
-    error?: { message?: string };
-  };
-  if (json.error || !json.result)
-    throw new Error(`Broadcast failed: ${json.error?.message ?? "no tx hash returned"}`);
-  return json.result;
-}
-
 /**
  * F1-contract-compatible sendTx: (built: BuiltTx) => Promise<txHash>.
- * Signs with eth_signTransaction (NEVER eth_sendTransaction — Arc answers
- * 401, bible §9.1), broadcasts the raw tx to our own RPC. Manual gas limit
- * comes from the BuiltTx (Memo txs revert under estimation).
+ * Delegates to signAndBroadcastArc. Manual gas limit comes from the BuiltTx
+ * (Memo txs revert under estimation).
  */
-export async function sendTxShim(built: BuiltTx, from: Address): Promise<Hex> {
-  const eth = getInjected();
+export async function sendTxShim(
+  built: BuiltTx,
+  from: Address,
+  provider?: InjectedEthereum | null,
+): Promise<Hex> {
+  const eth = resolveEth(provider);
   const [gasPrice, nonce] = await Promise.all([
     publicClient.getGasPrice(),
     publicClient.getTransactionCount({ address: from }),
   ]);
-  const signed = (await eth.request({
-    method: "eth_signTransaction",
-    params: [
-      {
-        from,
-        to: built.to,
-        data: built.data,
-        value: "0x0",
-        gas: toHex(built.gas),
-        gasPrice: toHex(gasPrice),
-        nonce: toHex(nonce),
-        chainId: toHex(CHAIN_ID),
-      },
-    ],
-  })) as string;
-  if (!signed || !signed.startsWith("0x"))
-    throw new Error("The wallet did not return a signed transaction.");
-  return broadcastRaw(signed as Hex);
+  return signAndBroadcastArc(eth, {
+    from,
+    to: built.to,
+    data: built.data,
+    gas: built.gas,
+    value: 0n,
+    gasPrice,
+    nonce,
+  });
 }
 
 /**
