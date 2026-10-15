@@ -187,7 +187,7 @@ raincheck-build/
 │   ├── src/receipts/    # canonical receipt builder (jcs), types
 │   ├── src/webhooks/    # Circle Contracts API monitors (optional) + HMAC receiver
 │   ├── test/            # backend tests — 57/57 passing
-│   └── render.yaml      # Render blueprint (service + persistent disk)
+│   └── render.yaml      # Render blueprint (free web service, no disk)
 ├── frontend/            # React + Vite + Tailwind + Privy — dashboard
 │   ├── src/pages/       # LandingPage, VerifyPage, dashboard pages
 │   ├── src/components/  # dashboard, landing, ui, token, BridgePanel, GetEurcPanel
@@ -304,10 +304,10 @@ Open a receipt, walk the flow. On the detail page, every action button names the
 
 `backend/render.yaml` is the blueprint (apply from the dashboard or `render blueprint apply` from the repo root):
 
-- Node 20 runtime; build command `npm ci && npm run build`; start command `npm start`; health check `/health`.
-- Set `FRONTEND_URL` to the frontend origin (CORS), `RPC_URL` to your Arc RPC endpoint, `ESCROW_ADDRESS` / `ESCROW_DEPLOY_BLOCK` (and the `_EURC` pair) to the production instances above.
-- **Persistent disk is mandatory** — the SQLite indexer cache lives at `RAINCHECK_DB_PATH=/data/raincheck-index.db`, and Render disks are not available on the free tier; without one the DB resets on every redeploy/restart.
-- `WEBHOOK_SECRET` has `sync: false` in the blueprint — set it manually in the Render dashboard, never in a file.
+- Instance type **Free** (`plan: free`). Root directory `backend/`. Build `npm ci && npm run build`; start `npm start`; health check `/health`.
+- Set `FRONTEND_URL` to the frontend origin (CORS) in the Render dashboard. `RPC_URL`, both escrow addresses, and the deploy blocks are already in the blueprint.
+- The free tier has no disk and the service sleeps when idle. `RAINCHECK_DB_PATH=/tmp/raincheck-index.db` is a cache only. After a cold start the indexer rebuilds it from chain; the dashboard shows what has been indexed so far, never invented rows.
+- `WEBHOOK_SECRET` and `FRONTEND_URL` have `sync: false` — set them in the Render dashboard, never in a file.
 - A fresh deploy backfills the index from the deploy blocks, so the dashboard is live without a data migration.
 
 ---
@@ -354,7 +354,7 @@ Public defaults live in the `.env.example` files. Copy them to `.env` for local 
 | `ESCROW_ADDRESS_EURC` | no | `0x3ceba2fbeb27162bfc4888f6b61e48bd359c1e0a` (V1 EURC production) |
 | `ESCROW_DEPLOY_BLOCK_EURC` | no | `25962288` |
 | `MEMO_ADDRESS` | no | `0x5294E9927c3306DcBaDb03fe70b92e01cCede505` (third-party infra) |
-| `RAINCHECK_DB_PATH` | no | `/data/raincheck-index.db` on Render (persistent disk); filesystem path for the SQLite cache |
+| `RAINCHECK_DB_PATH` | no | `/tmp/raincheck-index.db` on the free Render service (ephemeral cache, rebuilt from chain after sleep). Locally, any filesystem path |
 | `FRONTEND_URL` | no | frontend origin, used for CORS |
 | `WEBHOOK_SECRET` | **SECRET** | HMAC-SHA256 key for verifying webhook signatures. No value in the example file on purpose — generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `WEBHOOK_URL` | no | public URL the optional webhook receiver listens on |

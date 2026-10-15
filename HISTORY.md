@@ -237,3 +237,11 @@ Local app: API `http://127.0.0.1:3000` (`/health` ok, chain 5042, 6 indexed rece
 Chain status is ATTESTED. The pre-send `eth_call` on the unwrapped escrow step reported "Pre-send check passed" before the wallet prompt. MetaMask still logs `Method not supported` for `eth_signTransaction`; the wallet `eth_sendTransaction` fallback is what actually broadcast. The detail page 404'd for a few seconds because the indexer had not polled the new log yet, and the 404 path only probed V2. Retry after the poller caught up showed the receipt, with an honest "indexer says OPEN, chain says ATTESTED" banner until the cache caught the attest. The 404 path now reads both production escrows from chain before V2. Capture completed after the 300s window. Chain status `CAPTURED` (ordinal 3). capture tx `0x945755f14a09a35e0cd0c0bc65a59147b034be283f565158d66b110d3d50d959` (Memo #1274, block 26027221). The UI showed "Released to seller on-chain" and "This receipt is terminal (CAPTURED)." Pre-send check passed before the capture prompt. Print / Save as PDF button is on the receipt page (browser print dialog; not a fake export). Recorded in PROOFS.md §6.
 
 **Still open:** GitHub push, Vercel, Render, and one more open → attest → capture through the deployed frontend. Third-party volume and OIDC_RS256 stay specified-not-live.
+
+---
+
+## 14. 2026-10-15 — operator name, Render free tier
+
+The operator asked to be recorded as **devmo**.
+
+Render target is a **free** web service (`plan: free` in `backend/render.yaml`). The free tier cannot mount a disk, so the persistent-disk block is removed. `RAINCHECK_DB_PATH` is `/tmp/raincheck-index.db`. That file is a cache: after the free instance sleeps or redeploys, the indexer rebuilds it from Arc mainnet. `FRONTEND_URL` stays dashboard-only (CORS for the Vercel origin). No paid instance type.

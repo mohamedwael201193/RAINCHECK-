@@ -1,32 +1,37 @@
-# Render blueprint for the RAINCHECK receipt API (backend/).
-# Apply from the repo root: `render blueprint apply` or import via the dashboard.
+# Render blueprint for the RAINCHECK receipt API.
+# Service root directory: backend/
+# Instance type: Free (plan: free). Free web services sleep after inactivity
+# and have no persistent disk. The SQLite file is a cache; a cold start
+# rebuilds it from Arc mainnet. Chain remains the source of truth.
 #
-# NOTE: The backend's SQLite indexer cache lives on the filesystem, so the
-# service mounts a persistent disk at /data and RAINCHECK_DB_PATH points there.
-# Render disks are NOT available on the free tier — use a paid instance type
-# or the DB will reset on every redeploy/restart.
+# Operator: devmo
 
 services:
   - type: web
     name: raincheck-api
     runtime: node
+    plan: free
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: PORT
-        value: 3000
+        value: "3000"
       - key: RPC_URL
         value: https://rpc.mainnet.arc.io
       - key: ESCROW_ADDRESS
         value: 0x97f233865ae84DC7475F6D7CA404930654580CB5
       - key: ESCROW_DEPLOY_BLOCK
-        value: 25956323
+        value: "25956323"
+      - key: ESCROW_ADDRESS_EURC
+        value: 0x3ceba2fbeb27162bfc4888f6b61e48bd359c1e0a
+      - key: ESCROW_DEPLOY_BLOCK_EURC
+        value: "25962288"
+      - key: MEMO_ADDRESS
+        value: 0x5294E9927c3306DcBaDb03fe70b92e01cCede505
       - key: RAINCHECK_DB_PATH
-        value: /data/raincheck-index.db
+        value: /tmp/raincheck-index.db
+      - key: FRONTEND_URL
+        sync: false   # Vercel origin, set in the dashboard after the frontend deploys
       - key: WEBHOOK_SECRET
         sync: false   # set manually in the Render dashboard; never commit a value
-    disk:
-      name: raincheck-data
-      mountPath: /data
-      sizeGB: 1
