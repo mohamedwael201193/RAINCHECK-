@@ -167,7 +167,7 @@ export async function sendTxShim(
     gas: built.gas,
     value: 0n,
     gasPrice,
-    nonce,
+    nonce: BigInt(nonce),
   });
 }
 
