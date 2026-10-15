@@ -245,3 +245,15 @@ Chain status is ATTESTED. The pre-send `eth_call` on the unwrapped escrow step r
 The operator asked to be recorded as **devmo**.
 
 Render target is a **free** web service (`plan: free` in `backend/render.yaml`). The free tier cannot mount a disk, so the persistent-disk block is removed. `RAINCHECK_DB_PATH` is `/tmp/raincheck-index.db`. That file is a cache: after the free instance sleeps or redeploys, the indexer rebuilds it from Arc mainnet. `FRONTEND_URL` stays dashboard-only (CORS for the Vercel origin). No paid instance type.
+
+---
+
+## 15. 2026-10-15 — deploy tokens are in scope
+
+devmo added this to the goal: use `RENDER_API_KEY` and `VERCEL_TOKEN` from the parent `raincheck/.env` (gitignored, never committed) to create the services and set their environment through the APIs.
+
+What gets set:
+- **Vercel:** the public frontend contract (`VITE_RPC_URL`, both escrow addresses, `VITE_REOWN_PROJECT_ID`, and `VITE_API_URL` once the Render URL exists).
+- **Render free web service:** the backend contract (`RPC_URL`, both escrows, deploy blocks, Memo, `PORT`, `RAINCHECK_DB_PATH=/tmp/raincheck-index.db`, `FRONTEND_URL` once the Vercel origin exists).
+
+What stays off both services: `DEPLOYER_PRIVATE_KEY`, `RENDER_API_KEY`, `VERCEL_TOKEN`, `GITHUB_TOKEN`, Groq keys, and `npm_token`. Those are local tooling only.
