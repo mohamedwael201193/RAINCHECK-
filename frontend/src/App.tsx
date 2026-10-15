@@ -20,6 +20,7 @@ const VerifyPage = lazy(() => import("./pages/VerifyPage"));
 // is cache" architecture) won the pick; F1's direct-eth_getLogs candidate
 // (src/pages/ActivityPage.tsx) was removed.
 const ActivityPage = lazy(() => import("./pages/dashboard/ActivityPage"));
+const BridgePage = lazy(() => import("./pages/dashboard/BridgePage"));
 
 function withSuspense(element: ReactNode) {
   return <Suspense fallback={<RouteSkeleton />}>{element}</Suspense>;
@@ -47,6 +48,10 @@ export default function App() {
           <Route
             path="/dashboard/activity"
             element={withSuspense(<ActivityPage />)}
+          />
+          <Route
+            path="/dashboard/bridge"
+            element={withSuspense(<BridgePage />)}
           />
           {/* Unknown routes: the 404 below explains honestly instead of
               dead-ending. */}

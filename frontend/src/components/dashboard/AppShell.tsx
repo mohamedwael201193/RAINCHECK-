@@ -70,6 +70,15 @@ function ShieldIcon() {
     </svg>
   );
 }
+function BridgeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 17c2.5-5.5 6-8 9-8s6.5 2.5 9 8" />
+      <path d="M5.5 13.5v-2M9.5 10.8V9M14.5 9v1.8M18.5 11.5v2" />
+      <path d="M2 20h20" />
+    </svg>
+  );
+}
 function BookIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -90,6 +99,7 @@ const NAV: NavItem[] = [
   { to: "/dashboard", label: "Receipts", end: true, Icon: TicketIcon },
   { to: "/dashboard/new", label: "New receipt", end: true, Icon: PlusIcon },
   { to: "/dashboard/activity", label: "Activity", end: false, Icon: PulseIcon },
+  { to: "/dashboard/bridge", label: "Bridge", end: true, Icon: BridgeIcon },
   { to: "/verify", label: "Verify", end: false, Icon: ShieldIcon },
 ];
 

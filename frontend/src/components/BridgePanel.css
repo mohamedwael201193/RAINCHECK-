@@ -1,0 +1,371 @@
+/* BridgePanel — "Bridge out" (BRIDGE). RAINCHECK identity tokens
+   (#0B1220 / #35E0FF / #F4EFE6 / #F4FEFF), one accent only. Calm card
+   anatomy: no glow, no tilt, no marketing effects. Class names are the
+   TSX contract — restyle here, never there. */
+
+.bp {
+  --bp-card: #0e1728;
+  --bp-accent: #35e0ff;
+  --bp-text: #f4feff;
+  --bp-muted: rgba(244, 254, 255, 0.66);
+  --bp-faint: rgba(244, 254, 255, 0.44);
+  --bp-rule: rgba(244, 254, 255, 0.12);
+  --bp-field: rgba(244, 254, 255, 0.05);
+  color: var(--bp-text);
+  max-width: 720px;
+}
+
+.bp-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--bp-accent);
+}
+
+.bp-title {
+  margin: 0;
+  font-family: "Archivo Black", "Inter", system-ui;
+  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  line-height: 1;
+}
+
+.bp-accent {
+  color: var(--bp-accent);
+}
+
+.bp-sub {
+  margin: 12px 0 0;
+  max-width: 60ch;
+  color: var(--bp-muted);
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------- token select */
+
+.bp-tokens {
+  display: flex;
+  gap: 10px;
+  margin: 24px 0 0;
+}
+
+.bp-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--bp-rule);
+  border-radius: 12px;
+  background: var(--bp-field);
+  color: var(--bp-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bp-token.is-active {
+  border-color: var(--bp-accent);
+}
+
+.bp-token-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bp-accent);
+  border: 1px solid var(--bp-accent);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.bp-token-tag.is-soon {
+  color: var(--bp-faint);
+  border-color: var(--bp-rule);
+}
+
+/* ------------------------------------------------------------ states */
+
+.bp-connect {
+  margin-top: 28px;
+  padding: 24px;
+  border: 1px dashed var(--bp-rule);
+  border-radius: 14px;
+  background: var(--bp-card);
+}
+
+.bp-connect p {
+  margin: 0 0 16px;
+  color: var(--bp-muted);
+}
+
+/* -------------------------------------------------------------- form */
+
+.bp-form {
+  margin-top: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.bp-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--bp-muted);
+}
+
+.bp-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--bp-rule);
+  border-radius: 12px;
+  background: var(--bp-field);
+}
+
+.bp-amount-row input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--bp-text);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.bp-amount-sym {
+  font-weight: 800;
+  color: var(--bp-faint);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.bp-select,
+.bp-input-mono {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--bp-rule);
+  border-radius: 12px;
+  background: var(--bp-field);
+  color: var(--bp-text);
+  font-size: 1rem;
+}
+
+.bp-select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.bp-select option {
+  background: #0b1220;
+  color: #f4feff;
+}
+
+.bp-input-mono {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.9rem;
+}
+
+.bp-field-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--bp-faint);
+  line-height: 1.5;
+}
+
+.bp-field-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #ff9d9d;
+}
+
+/* ----------------------------------------------------------- actions */
+
+.bp-cta {
+  margin-top: 24px;
+}
+
+.bp-hint {
+  color: var(--bp-muted);
+  font-size: 14px;
+}
+
+.bp-steps {
+  margin-top: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.bp-step {
+  padding: 20px;
+  border: 1px solid var(--bp-rule);
+  border-radius: 14px;
+  background: var(--bp-card);
+}
+
+.bp-step-title {
+  margin: 0 0 8px;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.bp-step-desc {
+  margin: 0 0 12px;
+  color: var(--bp-muted);
+  line-height: 1.6;
+}
+
+.bp-tech {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--bp-faint);
+}
+
+.bp-tech summary {
+  cursor: pointer;
+  color: var(--bp-muted);
+}
+
+.bp-tech p {
+  margin: 8px 0 0;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.bp-step-done {
+  margin: 0;
+  color: var(--bp-accent);
+  font-weight: 700;
+}
+
+.bp-fee-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--bp-faint);
+  line-height: 1.5;
+}
+
+.bp-done,
+.bp-error {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--bp-card);
+  border: 1px solid var(--bp-rule);
+}
+
+.bp-done-title {
+  margin: 0 0 8px;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--bp-accent);
+}
+
+.bp-done p,
+.bp-error p {
+  margin: 8px 0;
+  color: var(--bp-muted);
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.bp-error {
+  border-color: rgba(255, 157, 157, 0.4);
+}
+
+.bp-proof {
+  margin: 28px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--bp-rule);
+  font-size: 13px;
+  color: var(--bp-faint);
+}
+
+/* -------------------------------------------------------- EURC guide */
+
+.bp-eurc {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--bp-rule);
+  border-radius: 14px;
+  background: var(--bp-card);
+}
+
+.bp-eurc h3 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+.bp-eurc p {
+  color: var(--bp-muted);
+  line-height: 1.65;
+}
+
+.bp-eurc-routes {
+  font-size: 14px;
+}
+
+.bp-eurc-label {
+  margin: 16px 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+}
+
+.bp-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bp-addr {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--bp-text);
+  word-break: break-all;
+}
+
+.bp-copy-btn {
+  border: 1px solid var(--bp-rule);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bp-muted);
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.bp-copy-btn:hover {
+  border-color: var(--bp-accent);
+  color: var(--bp-text);
+}
+
+.bp-explorer-link {
+  font-size: 12px;
+}
+
+.bp-eurc-note {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: var(--bp-faint);
+}
+
+/* ------------------------------------------------------------ mobile */
+
+@media (max-width: 560px) {
+  .bp-tokens {
+    flex-wrap: wrap;
+  }
+
+  .bp-step,
+  .bp-eurc {
+    padding: 16px;
+  }
+}
