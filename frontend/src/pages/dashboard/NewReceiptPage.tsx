@@ -147,7 +147,10 @@ interface Step {
   txHash?: Hex;
 }
 
-function freshSteps(amountLabel: string, symbol: string): Step[] {
+function freshSteps(amountLabel: string, symbol: string, isV2 = false): Step[] {
+  // V2's 7-param authorize writes 2 extra storage slots: measured 249,066 gas
+  // on mainnet — the manual limit is 300k, not the V1 250k.
+  const authorizeGas = isV2 ? GAS_LIMITS.authorizeV2 : GAS_LIMITS.authorize;
   return [
     {
       n: 1,
@@ -164,7 +167,7 @@ function freshSteps(amountLabel: string, symbol: string): Step[] {
     {
       n: 3,
       title: "Open the receipt",
-      hint: `Locks ${amountLabel} ${symbol} in escrow. Sent through the Memo contract so the receipt is anchored on-chain. Manual gas limit ${GAS_LIMITS.authorize.toLocaleString()}.`,
+      hint: `Locks ${amountLabel} ${symbol} in escrow${isV2 ? " (V2 experimental)" : ""}. Sent through the Memo contract so the receipt is anchored on-chain. Manual gas limit ${authorizeGas.toLocaleString()}.`,
       phase: "idle",
     },
   ];
@@ -292,7 +295,7 @@ export default function NewReceiptPage() {
   const gate = useMemo(() => {
     if (!buyer || !balances || amountUnits === null)
       return { known: false as const, ok: false, message: null as string | null, shortfall: null as string | null };
-    const gasUnits = GAS_LIMITS.approve + GAS_LIMITS.authorize;
+    const gasUnits = GAS_LIMITS.approve + (isV2 ? GAS_LIMITS.authorizeV2 : GAS_LIMITS.authorize);
     const gasCostWei = gasUnits * balances.gasPriceWei;
     const erc20Ok = balances.erc20Units >= amountUnits;
     const gasOk = balances.nativeWei >= gasCostWei;
@@ -314,7 +317,7 @@ export default function NewReceiptPage() {
   }, [buyer, balances, amountUnits, tokenSymbol]);
 
   // ---- submit ----
-  const [steps, setSteps] = useState<Step[]>(() => freshSteps("—", tokenSymbol));
+  const [steps, setSteps] = useState<Step[]>(() => freshSteps("—", tokenSymbol, isV2));
   const [running, setRunning] = useState(false);
   const [fatal, setFatal] = useState<string | null>(null);
   const [fatalTechnical, setFatalTechnical] = useState<string | null>(null);
@@ -351,7 +354,7 @@ export default function NewReceiptPage() {
     setFatal(null);
     setFatalTechnical(null);
     setOpenedPaymentId(null);
-    setSteps(freshSteps(baseToUsdc(amount), tokenSymbol));
+    setSteps(freshSteps(baseToUsdc(amount), tokenSymbol, isV2));
 
     try {
       // 1 — Sign the terms (free, off-chain). termsHash = sha256(canonical
@@ -835,8 +838,8 @@ export default function NewReceiptPage() {
                 <div>
                   <p className="rc-roadmap-title">Open the receipt</p>
                   <p className="rc-roadmap-desc">
-                    Locks {amountLabel} {tokenSymbol} in escrow. Sent through the Memo contract so the
-                    receipt is anchored on-chain. Manual gas limit {GAS_LIMITS.authorize.toLocaleString()}.
+                    Locks {amountLabel} {tokenSymbol} in escrow{isV2 ? " (V2 experimental)" : ""}. Sent through the Memo contract so the
+                    receipt is anchored on-chain. Manual gas limit {(isV2 ? GAS_LIMITS.authorizeV2 : GAS_LIMITS.authorize).toLocaleString()}.
                   </p>
                 </div>
               </li>

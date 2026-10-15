@@ -4,6 +4,9 @@ import {
   LiveStats,
   HowItWorks,
   TrustDisclosure,
+  ProtocolSection,
+  OracleTeaser,
+  FirstScreenTrust,
   Footer,
 } from "../components/landing";
 import "./LandingPage.css";
@@ -45,11 +48,15 @@ export default function LandingPage() {
 
       <main className="rc-sections">
         <Hero />
+        {/* Bible rule: "What you have to trust" on the FIRST screen. */}
+        <FirstScreenTrust />
         <LiveStats />
         <div id="how">
           <HowItWorks />
         </div>
         <TrustDisclosure />
+        <ProtocolSection />
+        <OracleTeaser />
       </main>
 
       <Footer />

@@ -23,8 +23,22 @@ export interface Receipt {
   status: ReceiptStatus | string;
   /** Payment token symbol ("USDC" | "EURC"); absent = USDC (pre-multi-asset). */
   token?: string;
+  /** Protocol tier: "V1" (default) or "V2" (experimental). */
+  protocol?: "V1" | "V2";
+  /** Originating escrow instance address, when known (always set for V2). */
+  escrow?: string;
   /** unix milliseconds; undefined = unknown (sorts last) */
   updatedAt?: number;
+}
+
+/**
+ * Normalize a V2 chain status name (from readV2ReceiptFromChain) to the
+ * dashboard ReceiptStatus. V2 shares V1's status ordinals, so this is a
+ * straight pass-through with a safety net.
+ */
+export function normalizeStatusForV2(statusName: string): ReceiptStatus | string {
+  const up = statusName.trim().toUpperCase();
+  return (KNOWN_STATUSES as readonly string[]).includes(up) ? up : "OPEN";
 }
 
 /** Plain-meaning copy per status (build bible §8.1 S3). Pill styling lives in CSS. */
@@ -87,6 +101,8 @@ function coerceReceipt(raw: unknown): Receipt | null {
     status: normalizeStatus(r.status),
     token:
       r.token === "EURC" ? "EURC" : r.token === "USDC" ? "USDC" : undefined,
+    protocol: r.protocol === "V2" ? "V2" : undefined,
+    escrow: typeof r.escrow === "string" ? r.escrow : undefined,
     updatedAt: normalizeUpdatedAt(r.updatedAt),
   };
 }

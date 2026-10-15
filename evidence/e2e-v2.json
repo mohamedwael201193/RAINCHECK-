@@ -1,0 +1,179 @@
+{
+  "generatedAt": "2026-10-14T23:41:05.263Z",
+  "suite": "E2E-V2",
+  "escrow": "0x3795b865f7fc84a14ab60456be9fc6dd0cb56f0c",
+  "escrowNote": "RaincheckEscrowV2 — EXPERIMENTAL, Sourcify exact_match, NOT audited",
+  "chainId": 5042,
+  "rpc": "https://rpc.mainnet.arc.io",
+  "deployer": "0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3",
+  "amountPerPath": "10000",
+  "amountNote": "0.01 USDC dust per path",
+  "challengeWindow": 300,
+  "gasModelNote": "Arc gas is the same asset as the USDC ERC-20 face (18-dec native vs 6-dec face): balance deltas equal transfer amounts minus gas. All refund/payout assertions verified net of the measured gas cost of the asserting tx.",
+  "paths": {
+    "T1_happy": {
+      "paymentId": "0xb555ca3b6e5381482064b8eae4bd7360bafc79f6abae721bc449f97b1fc33a35",
+      "flow": "authorize(7-param, policyRef) -> attest -> capture",
+      "result": "CAPTURED; USDC Transfer(V2 -> seller, 10000) in the capture tx"
+    },
+    "T2_dispute": {
+      "paymentId": "0xf952aa0249920a68cc70ee3cf2eb777b7cf98e0c0b9b6894af625b0a50fe512b",
+      "flow": "authorize -> attest -> flag -> void",
+      "result": "VOIDED; buyer refunded 10000 net of gas; disputes +1"
+    },
+    "T3_voidAfterDeadline": {
+      "paymentId": "0x8f346d9738365a1cf18868bcafaa58ddc5d114887a33124b9ac6cb804fca204c",
+      "flow": "authorize -> voidAfterDeadline",
+      "result": "VOIDED; buyer refunded 10000 net of gas; disputes unchanged"
+    }
+  },
+  "disputesAfter": "4",
+  "gasTotal": "1503237",
+  "costTotalWei": "30064741733232261",
+  "txs": [
+    {
+      "label": "t1-approve",
+      "kind": "approve",
+      "hash": "0x9398e3b4aa708a3c50e80d6a707049f972d6cc542f7308d3b8a985eb177db394",
+      "explorer": "https://explorer.arc.io/tx/0x9398e3b4aa708a3c50e80d6a707049f972d6cc542f7308d3b8a985eb177db394",
+      "blockNumber": "26000844",
+      "nonce": 201,
+      "gasUsed": "79543",
+      "costWei": "1590860091713079",
+      "status": "success",
+      "proof": "approve(V2, 0.01 USDC): allowance for the T1 receipt"
+    },
+    {
+      "label": "t1-authorize",
+      "kind": "authorize",
+      "hash": "0x2d773646bcb68724e2a00d883848cef33f484198c12831378a844c659c7d64d6",
+      "explorer": "https://explorer.arc.io/tx/0x2d773646bcb68724e2a00d883848cef33f484198c12831378a844c659c7d64d6",
+      "blockNumber": "26000852",
+      "nonce": 202,
+      "gasUsed": "248472",
+      "costWei": "4969440286488216",
+      "status": "success",
+      "proof": "authorize(7-param, policyRef set): V2 pulls 0.01 USDC; receipt -> OPEN"
+    },
+    {
+      "label": "t1-attest",
+      "kind": "attest",
+      "hash": "0x808d1eefd6c2884214b6a0106bf797f7d575dc3563931a2c7b79a9b15b8d7779",
+      "explorer": "https://explorer.arc.io/tx/0x808d1eefd6c2884214b6a0106bf797f7d575dc3563931a2c7b79a9b15b8d7779",
+      "blockNumber": "26000859",
+      "nonce": 203,
+      "gasUsed": "104436",
+      "costWei": "2088720120414708",
+      "status": "success",
+      "proof": "attestDelivery: receipt -> ATTESTED, 300s window"
+    },
+    {
+      "label": "t2-approve",
+      "kind": "approve",
+      "hash": "0x4278796fc38f75a332a9e63fb09b027ff4416f5d65ce4994568620c750eaedcc",
+      "explorer": "https://explorer.arc.io/tx/0x4278796fc38f75a332a9e63fb09b027ff4416f5d65ce4994568620c750eaedcc",
+      "blockNumber": "26000866",
+      "nonce": 204,
+      "gasUsed": "79543",
+      "costWei": "1590860091713079",
+      "status": "success",
+      "proof": "approve(V2, 0.01 USDC): allowance for the T2 receipt"
+    },
+    {
+      "label": "t2-authorize",
+      "kind": "authorize",
+      "hash": "0xd857115cb39e25fc513b8bfcf135ba00eea0f36b4c4f9e6194ea532d7a8dbe61",
+      "explorer": "https://explorer.arc.io/tx/0xd857115cb39e25fc513b8bfcf135ba00eea0f36b4c4f9e6194ea532d7a8dbe61",
+      "blockNumber": "26000873",
+      "nonce": 205,
+      "gasUsed": "228188",
+      "costWei": "4563760263100764",
+      "status": "success",
+      "proof": "authorize(7-param, zeroed refs): standalone; receipt -> OPEN"
+    },
+    {
+      "label": "t2-attest",
+      "kind": "attest",
+      "hash": "0xee9a45fc0dad755fd7b96a57089796238baa9a9d8d6c3eb0621c16f063d767b0",
+      "explorer": "https://explorer.arc.io/tx/0xee9a45fc0dad755fd7b96a57089796238baa9a9d8d6c3eb0621c16f063d767b0",
+      "blockNumber": "26000880",
+      "nonce": 206,
+      "gasUsed": "104448",
+      "costWei": "2088960120428544",
+      "status": "success",
+      "proof": "attestDelivery: receipt -> ATTESTED"
+    },
+    {
+      "label": "t2-flag",
+      "kind": "flag",
+      "hash": "0x9fbd7a4fe7133c15cd5cc4ee4ac9e318ad12681699ce7652371966f063fb4e1f",
+      "explorer": "https://explorer.arc.io/tx/0x9fbd7a4fe7133c15cd5cc4ee4ac9e318ad12681699ce7652371966f063fb4e1f",
+      "blockNumber": "26000888",
+      "nonce": 207,
+      "gasUsed": "82271",
+      "costWei": "1645420094858463",
+      "status": "success",
+      "proof": "flagNonDelivery: receipt -> FLAGGED"
+    },
+    {
+      "label": "t2-void",
+      "kind": "void",
+      "hash": "0x82b83d9c64b0278574e8affba033e0572b7fc6d7f389b4ccf31c74c82cae28f1",
+      "explorer": "https://explorer.arc.io/tx/0x82b83d9c64b0278574e8affba033e0572b7fc6d7f389b4ccf31c74c82cae28f1",
+      "blockNumber": "26000895",
+      "nonce": 208,
+      "gasUsed": "92878",
+      "costWei": "1857560107088334",
+      "status": "success",
+      "proof": "void: full refund; disputes(seller) +1; receipt -> VOIDED"
+    },
+    {
+      "label": "t3-approve",
+      "kind": "approve",
+      "hash": "0x60fef02750387722087087dbe3018f5762a8ee6cd01f883c21cd4d6247e941b7",
+      "explorer": "https://explorer.arc.io/tx/0x60fef02750387722087087dbe3018f5762a8ee6cd01f883c21cd4d6247e941b7",
+      "blockNumber": "26000903",
+      "nonce": 209,
+      "gasUsed": "79543",
+      "costWei": "1590860091713079",
+      "status": "success",
+      "proof": "approve(V2, 0.01 USDC): allowance for the T3 receipt"
+    },
+    {
+      "label": "t3-authorize",
+      "kind": "authorize",
+      "hash": "0x4140227440561ddb02ccb2c576696e598ce7f87c1f01e98c92c53c68ad198619",
+      "explorer": "https://explorer.arc.io/tx/0x4140227440561ddb02ccb2c576696e598ce7f87c1f01e98c92c53c68ad198619",
+      "blockNumber": "26000910",
+      "nonce": 210,
+      "gasUsed": "228176",
+      "costWei": "4563520263086928",
+      "status": "success",
+      "proof": "authorize(7-param): receipt -> OPEN; never attested"
+    },
+    {
+      "label": "t3-voidAfterDeadline",
+      "kind": "voidAfterDeadline",
+      "hash": "0xc55ed71296ddbe2332d0da984123f04a63580f5b333426cbc1f946d00e8fff9a",
+      "explorer": "https://explorer.arc.io/tx/0xc55ed71296ddbe2332d0da984123f04a63580f5b333426cbc1f946d00e8fff9a",
+      "blockNumber": "26001202",
+      "nonce": 211,
+      "gasUsed": "88316",
+      "costWei": "1766320101828348",
+      "status": "success",
+      "proof": "voidAfterDeadline: full refund; disputes unchanged; receipt -> VOIDED"
+    },
+    {
+      "label": "t1-capture",
+      "kind": "capture",
+      "hash": "0xf9673fa7a68b965349aba384f205792ed38e092b3343f2e6d366cf148bc9dcf5",
+      "explorer": "https://explorer.arc.io/tx/0xf9673fa7a68b965349aba384f205792ed38e092b3343f2e6d366cf148bc9dcf5",
+      "blockNumber": "26001456",
+      "nonce": 212,
+      "gasUsed": "87423",
+      "costWei": "1748460100798719",
+      "status": "success",
+      "proof": "capture after 300s window: 0.01 USDC paid to seller; receipt -> CAPTURED"
+    }
+  ]
+}

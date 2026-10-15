@@ -1,0 +1,113 @@
+/* RAINCHECK OracleTeaser — T0-O oracle tier placeholder.
+   Tokens: #0B1220 · #35E0FF · #F4EFE6. No serif anywhere. */
+
+.rc-oracle {
+  background: #0b1220;
+  color: #f4efe6;
+  padding: clamp(64px, 8vw, 112px) 24px;
+  border-top: 1px solid rgba(244, 254, 255, 0.08);
+}
+
+.rc-oracle-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.rc-oracle-eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #35e0ff;
+  margin: 0 0 20px;
+}
+
+.rc-oracle-title {
+  color: #f4feff;
+  max-width: 20ch;
+}
+
+.rc-oracle-tier {
+  color: #35e0ff;
+  font-size: 0.55em;
+  letter-spacing: 0.06em;
+  vertical-align: 0.35em;
+}
+
+.rc-oracle-sub {
+  color: rgba(244, 254, 255, 0.55);
+}
+
+.rc-oracle-card {
+  margin-top: 40px;
+  max-width: 720px;
+  border: 1px solid rgba(244, 254, 255, 0.14);
+  border-radius: 14px;
+  padding: 28px 30px;
+  background: rgba(244, 254, 255, 0.02);
+}
+
+.rc-oracle-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+  color: #f4feff;
+}
+
+.rc-oracle-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rc-oracle-card--live .rc-oracle-dot {
+  background: #35e0ff;
+  box-shadow: 0 0 12px rgba(53, 224, 255, 0.9);
+}
+
+.rc-oracle-card--deploying .rc-oracle-dot {
+  background: #ffb224;
+  box-shadow: 0 0 12px rgba(255, 178, 36, 0.7);
+  animation: rc-oracle-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes rc-oracle-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.rc-oracle-copy {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(244, 254, 255, 0.72);
+  margin: 0;
+  max-width: 62ch;
+}
+
+.rc-oracle-copy code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.88em;
+  color: #35e0ff;
+}
+
+.rc-oracle-addr {
+  margin: 16px 0 0;
+  font-size: 0.92rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-oracle-card--deploying .rc-oracle-dot {
+    animation: none;
+  }
+}

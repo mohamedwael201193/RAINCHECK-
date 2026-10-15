@@ -1,0 +1,120 @@
+/* RAINCHECK ProtocolSection — protocol version cards.
+   Tokens: #0B1220 · #35E0FF · #F4EFE6. No serif anywhere.
+   (Replaces the bridge worker's structural placeholder; class names kept.) */
+
+.rc-protocol {
+  background: #0b1220;
+  color: #f4efe6;
+  padding: clamp(64px, 8vw, 112px) 24px;
+  border-top: 1px solid rgba(244, 254, 255, 0.08);
+}
+
+.rc-protocol-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.rc-protocol-eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #35e0ff;
+  margin: 0 0 20px;
+}
+
+.rc-protocol-title {
+  color: #f4feff;
+}
+
+.rc-protocol-sub {
+  color: rgba(244, 254, 255, 0.55);
+}
+
+.rc-protocol-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 48px;
+}
+
+.rc-protocol-card {
+  border: 1px solid rgba(244, 254, 255, 0.14);
+  border-radius: 14px;
+  padding: 26px 24px;
+  background: rgba(244, 254, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rc-protocol-card--experimental {
+  border-color: rgba(255, 178, 36, 0.45);
+  background: rgba(255, 178, 36, 0.04);
+}
+
+.rc-protocol-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.rc-protocol-status--production {
+  color: #35e0ff;
+}
+
+.rc-protocol-status--experimental {
+  color: #ffb224;
+}
+
+.rc-protocol-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.rc-protocol-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #f4feff;
+  margin: 0;
+}
+
+.rc-protocol-note {
+  font-size: 0.94rem;
+  line-height: 1.65;
+  color: rgba(244, 254, 255, 0.68);
+  margin: 0;
+  flex: 1;
+}
+
+.rc-protocol-addr {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.rc-protocol-foot {
+  margin-top: 40px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(244, 254, 255, 0.6);
+  max-width: 70ch;
+  border-left: 3px solid rgba(53, 224, 255, 0.5);
+  padding-left: 18px;
+}
+
+@media (max-width: 900px) {
+  .rc-protocol-grid {
+    grid-template-columns: 1fr;
+  }
+}

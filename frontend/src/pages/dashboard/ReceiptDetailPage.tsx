@@ -1024,7 +1024,11 @@ export default function ReceiptDetailPage() {
           Every state transition, rebuilt from chain events and Memo anchors.
         </p>
         {r.timeline.length === 0 ? (
-          <p className="rc-muted">No transitions recorded yet.</p>
+          <p className="rc-muted">
+            {isV2Receipt
+              ? "The indexer doesn't track the experimental tier, so this timeline is empty — the transitions happened on-chain (see the lifecycle stepper above and the V2 lifecycle panel)."
+              : "No transitions recorded yet."}
+          </p>
         ) : (
           <ol className="rc-timeline">
             {r.timeline.map((e, i) => (

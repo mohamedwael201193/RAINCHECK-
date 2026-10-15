@@ -37,6 +37,17 @@ export const ESCROW_ADDRESS = "0x97f233865ae84DC7475F6D7CA404930654580CB5" as Ad
 // SAME V1 source — constructor arg changed to EURC only. Multi-asset = one
 // escrow instance per token.
 export const ESCROW_ADDRESS_EURC = "0x3ceba2fbeb27162bfc4888f6b61e48bd359c1e0a" as Address;
+
+/**
+ * RaincheckEscrowV2 — EXPERIMENTAL instance (Sourcify exact_match, Arc 5042).
+ * USDC-only. The app may authorize on V2 ONLY through buildAuthorizeV2 below,
+ * which targets the exact 7-parameter signature from
+ * contracts/src/RaincheckEscrowV2.sol:
+ *   authorize(bytes32,bytes32,address,uint256,uint256,bytes32,bytes32)
+ * (paymentId, termsHash, seller, amount, deadline, policyRef, fundingRef).
+ */
+export const V2_ESCROW_ADDRESS =
+  "0x3795b865f7fc84a14ab60456be9fc6dd0cb56f0c" as Address;
 export const MEMO_ADDRESS = "0x5294E9927c3306DcBaDb03fe70b92e01cCede505" as Address;
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as Address;
 /** Arc EURC — ERC-20 face (6 decimals), the EURC escrow's token. */
@@ -56,6 +67,9 @@ function tokenSymbolForEscrowAddr(escrow: string): "USDC" | "EURC" {
 /** Manual gas limits (bible §9.1). Measured mainnet costs sit comfortably below. */
 export const GAS_LIMITS = {
   authorize: 250_000n,
+  // 7-param authorize writes 2 extra storage slots (policyRef, fundingRef):
+  // measured 249,066 on mainnet (evidence/e2e-v2/PROOFS.md) — 300k headroom.
+  authorizeV2: 300_000n,
   attestDelivery: 150_000n,
   capture: 120_000n,
   flagNonDelivery: 120_000n,
@@ -466,7 +480,8 @@ export type TxKind =
   | "capture"
   | "flagNonDelivery"
   | "void"
-  | "voidAfterDeadline";
+  | "voidAfterDeadline"
+  | "cctpBurn";
 
 /** A fully-built transaction: exact calldata, manual gas limit, memo metadata. */
 export interface BuiltTx {
@@ -652,6 +667,74 @@ export function buildAuthorize(
     },
     GAS_LIMITS.authorize,
     `Create the receipt and lock ${baseToUsdc(a)} ${symbol} · ${shortId(pid)}`,
+  );
+}
+
+/**
+ * buildAuthorizeV2 — authorize on the experimental V2 escrow with the exact
+ * 7-parameter signature from contracts/src/RaincheckEscrowV2.sol:
+ *   authorize(bytes32 paymentId, bytes32 termsHash, address seller,
+ *             uint256 amount, uint256 deadline,
+ *             bytes32 policyRef, bytes32 fundingRef)
+ *
+ * policyRef / fundingRef are trust-stack composition refs; zeroed = standalone
+ * behavior identical to V1. Accepts ""/undefined as zeroed. V2 is USDC-only;
+ * the memo spec is "raincheck-receipt/v2".
+ */
+export function buildAuthorizeV2(
+  paymentId: Hex | string,
+  termsHash: Hex | string,
+  seller: string,
+  amount: bigint | string | number,
+  deadline: number | bigint,
+  policyRef: Hex | string = "0x0000000000000000000000000000000000000000000000000000000000000000",
+  fundingRef: Hex | string = "0x0000000000000000000000000000000000000000000000000000000000000000",
+  escrow: Address = V2_ESCROW_ADDRESS,
+): BuiltTx {
+  const pid = requireBytes32("paymentId", paymentId);
+  const th = requireBytes32("termsHash", termsHash);
+  const s = requireAddress("seller", seller);
+  const a = requirePositiveBigint("amount", amount);
+  const dl = BigInt(deadline);
+  const now = BigInt(Math.floor(Date.now() / 1000));
+  if (dl <= now)
+    throw new Error(
+      `deadline is not in the future — the contract will reject this (deadline not in future)`,
+    );
+  const pr =
+    policyRef === ""
+      ? "0x0000000000000000000000000000000000000000000000000000000000000000"
+      : requireBytes32("policyRef", policyRef);
+  const fr =
+    fundingRef === ""
+      ? "0x0000000000000000000000000000000000000000000000000000000000000000"
+      : requireBytes32("fundingRef", fundingRef);
+  const inner = encodeFunctionCall(
+    "authorize(bytes32,bytes32,address,uint256,uint256,bytes32,bytes32)",
+    ["bytes32", "bytes32", "address", "uint256", "uint256", "bytes32", "bytes32"],
+    [pid, th, s, a, dl, pr, fr],
+  );
+  return wrapInMemo(
+    "authorize",
+    escrow,
+    inner,
+    "authorize-v2",
+    {
+      spec: "raincheck-receipt/v2",
+      action: "authorize",
+      protocol: "v2",
+      experimental: true,
+      paymentId: pid,
+      termsHash: th,
+      seller: s,
+      amount: a.toString(),
+      deadline: dl.toString(),
+      policyRef: pr,
+      fundingRef: fr,
+      note: `Buyer locks USDC in the EXPERIMENTAL V2 escrow; receipt state -> OPEN. V2 is unaudited.`,
+    },
+    GAS_LIMITS.authorizeV2,
+    `Create the receipt on V2 (experimental) and lock ${baseToUsdc(a)} USDC · ${shortId(pid)}`,
   );
 }
 

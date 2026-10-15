@@ -397,3 +397,17 @@ a.rc-ticket:active {
     width: 100%;
   }
 }
+
+/* ---------- Protocol tier tabs (V1 / V2 experimental) ---------- */
+.rc-dash-proto {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+.rc-dash-proto-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(244, 254, 255, 0.6);
+  max-width: 68ch;
+}

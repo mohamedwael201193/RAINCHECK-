@@ -4,16 +4,21 @@
  * Everything here is read-only and wallet-less: it recomputes the receipt
  * fingerprint locally and reads the Memo anchor straight from the Arc RPC.
  *
- * Memo log layout (matches backend/src/indexer/config.ts + matcher.ts):
+ * Memo log layout (PROVEN against on-chain logs 2026-10-15 — the Memo
+ * contract at 0x5294E9927c3306DcBaDb03fe70b92e01cCede505 emits):
  *   Memo(address indexed sender, address indexed target,
- *        bytes32 indexed callDataHash, bytes32 memoId, bytes memo,
- *        uint256 memoIndex)
- *   topics = [sig, sender, target, callDataHash]
- *   data   = memoId(32B) | offset(32B) | memoIndex(32B) | memo bytes…
- * Binding rule: topics[3] MUST equal keccak256(tx.input) — the annotation is
- * cryptographically bound to the exact calldata that executed.
+ *        bytes32 indexed memoId, bytes32 callDataHash,
+ *        bytes memo, uint256 memoIndex)
+ *   topics = [sig, sender, target, memoId]
+ *   data   = callDataHash(32B) | offset(32B) | memoIndex(32B) | memo bytes…
+ * Binding rule: data word 0 MUST equal keccak256 of the INNER calldata —
+ * the bytes the Memo contract forwarded to the escrow. The outer
+ * transaction input is the memo() envelope, so the verifier ABI-decodes it
+ * to recover the inner calldata first. (An earlier revision of this file
+ * wrongly compared topics[3] against keccak256 of the OUTER input, which
+ * fails for every real receipt — fixed 2026-10-15.)
  */
-import { keccak256, toHex } from "viem";
+import { decodeFunctionData, keccak256, parseAbi, toHex } from "viem";
 import { jcs, receiptHash, txFromAnchor } from "./jcs";
 import { envVar, MEMO_ADDRESS, publicClient, tokenSymbolForEscrow } from "./chain";
 
@@ -86,8 +91,9 @@ function topicAddr(topic: string | undefined): string | null {
   return ("0x" + topic.slice(-40)).toLowerCase();
 }
 
-function memoIndexFromData(data: string): number | null {
+export function memoIndexFromData(data: string): number | null {
   try {
+    // Actual layout: word0 = callDataHash, word1 = offset, word2 = memoIndex.
     if (data && data.length >= 2 + 192) {
       return Number(BigInt("0x" + data.slice(2 + 128, 2 + 192)));
     }
@@ -97,10 +103,15 @@ function memoIndexFromData(data: string): number | null {
   return null;
 }
 
-function memoBytesFromData(data: string): { id: string | null; ascii: string | null } {
+export function memoBytesFromData(
+  data: string,
+  memoIdTopic: string | undefined,
+): { id: string | null; ascii: string | null } {
   try {
+    // Actual layout: word0 = callDataHash, word1 = offset to the memo bytes,
+    // word2 = memoIndex; the memoId is topics[3], not data word 0.
     if (data && data.length >= 2 + 192) {
-      const id = "0x" + data.slice(2, 2 + 64);
+      const id = memoIdTopic?.toLowerCase() ?? null;
       const off = Number(BigInt("0x" + data.slice(2 + 64, 2 + 128)));
       const len = Number(BigInt("0x" + data.slice(2 + off * 2, 2 + off * 2 + 64)));
       const bytesHex = data.slice(2 + off * 2 + 64, 2 + off * 2 + 64 + len * 2);
@@ -293,12 +304,33 @@ export async function verifyReceipt(
     .filter((l) => l.topics[0]?.toLowerCase() === BEFORE_MEMO_TOPIC)
     .map((l) => l.logIndex);
 
-  const recomputedCallDataHash = keccak256(tx.input).toLowerCase();
+  const recomputedCallDataHash = (() => {
+    // The outer transaction input is the memo() envelope. Decode it to get
+    // the INNER calldata the Memo contract forwarded — that is what the
+    // on-chain callDataHash commits to. Returns null when the transaction
+    // is not a memo() envelope (binding then can't be established).
+    try {
+      const decoded = decodeFunctionData({
+        abi: parseAbi(["function memo(address target, bytes callData, bytes32 memoId, bytes memoData)"]),
+        data: tx.input as `0x${string}`,
+      });
+      if (decoded.functionName === "memo" && decoded.args) {
+        return keccak256(decoded.args[1] as `0x${string}`).toLowerCase();
+      }
+    } catch {
+      /* not a memo() envelope */
+    }
+    return null;
+  })();
 
   let best: MemoAnchor | null = null;
   for (const log of memoLogs) {
-    const loggedCallDataHash = log.topics[3]?.toLowerCase() ?? null;
-    const { id, ascii } = memoBytesFromData(log.data);
+    const memoId = log.topics[3]?.toLowerCase() ?? null;
+    const loggedCallDataHash =
+      log.data && log.data.length >= 66
+        ? ("0x" + log.data.slice(2, 66)).toLowerCase()
+        : null;
+    const { id, ascii } = memoBytesFromData(log.data, log.topics[3]);
     const prevBefore = Math.max(-1, ...beforeIdx.filter((i) => i < log.logIndex));
     const innerEvents: InnerEvent[] = sorted
       .filter(
@@ -317,10 +349,13 @@ export async function verifyReceipt(
       memoIndex: memoIndexFromData(log.data),
       sender: topicAddr(log.topics[1]),
       target: topicAddr(log.topics[2]),
-      memoId: id,
+      memoId: id ?? memoId,
       loggedCallDataHash,
       recomputedCallDataHash,
-      bindingOk: loggedCallDataHash === recomputedCallDataHash,
+      bindingOk:
+        recomputedCallDataHash !== null &&
+        loggedCallDataHash !== null &&
+        loggedCallDataHash === recomputedCallDataHash,
       memoAscii: ascii,
       innerEvents,
     };
@@ -345,8 +380,10 @@ export async function verifyReceipt(
       label: "Memo is bound to the exact calldata",
       pass: best.bindingOk,
       detail: best.bindingOk
-        ? "The Memo's callDataHash equals keccak256 of the transaction's actual input — the annotation can't be swapped onto different calldata."
-        : "The Memo's callDataHash does NOT match this transaction's input. The anchor is not bound to what executed.",
+        ? "The Memo's callDataHash equals keccak256 of the inner calldata the Memo contract forwarded to the escrow — the annotation can't be swapped onto different calldata."
+        : best.recomputedCallDataHash === null
+          ? "This transaction is not a memo() envelope, so the inner calldata can't be recovered and the binding can't be checked."
+          : "The Memo's callDataHash does NOT match the inner calldata this transaction forwarded. The anchor is not bound to what executed.",
     });
     checks.push({
       label: "Anchor covers this receipt's payment",

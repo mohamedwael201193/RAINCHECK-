@@ -66,6 +66,11 @@ export default function ReceiptCard({ receipt }: { receipt: Receipt }) {
         <span className="rc-ticket-label">
           <TicketMark />
           Receipt
+          {receipt.protocol === "V2" && (
+            <span className="rc-v2-badge" title="Opened on the experimental V2 escrow — unaudited">
+              V2 · experimental
+            </span>
+          )}
         </span>
         <Pill status={String(receipt.status)} />
       </div>

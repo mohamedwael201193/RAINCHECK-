@@ -6,10 +6,12 @@ import StatsStrip from "../../components/dashboard/StatsStrip";
 import TapeEmpty from "../../components/dashboard/TapeEmpty";
 import { useWallet } from "../../components/dashboard/WalletContext";
 import { Receipt, fetchReceipts } from "../../lib/receipts";
+import { fetchV2ReceiptsFromChain } from "../../lib/v2";
 import "../../styles/app.css";
 import "./DashboardPage.css";
 
 type Filter = "ALL" | "OPEN" | "ATTESTED" | "FLAGGED" | "CAPTURED" | "VOIDED";
+type Proto = "V1" | "V2";
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "ALL", label: "All" },
@@ -44,13 +46,14 @@ export default function DashboardPage() {
   const [receipts, setReceipts] = useState<Receipt[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("ALL");
+  const [proto, setProto] = useState<Proto>("V1");
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setReceipts(null);
     setError(null);
-    fetchReceipts()
+    (proto === "V1" ? fetchReceipts() : fetchV2ReceiptsFromChain())
       .then((r) => {
         if (!cancelled) setReceipts(r);
       })
@@ -60,7 +63,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [reloadKey]);
+  }, [reloadKey, proto]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { ALL: 0 };
@@ -124,6 +127,46 @@ export default function DashboardPage() {
         <StatsStrip receipts={receipts} />
       </div>
 
+      {/* Protocol tier tabs: V1 (production, indexer) vs V2 (experimental, chain-direct) */}
+      <div
+        className="rc-dash-proto rcx-rise"
+        style={{ ["--rcx-i" as string]: "100ms" }}
+        role="tablist"
+        aria-label="Protocol tier"
+      >
+        {(
+          [
+            { key: "V1", label: "V1 receipts", sub: "production" },
+            { key: "V2", label: "V2 receipts", sub: "experimental" },
+          ] as { key: Proto; label: string; sub: string }[]
+        ).map((p) => {
+          const active = proto === p.key;
+          return (
+            <button
+              key={p.key}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setProto(p.key)}
+              className={`rc-chip${active ? " rc-chip-active" : ""}`}
+            >
+              {p.label}
+              {p.key === "V2" && (
+                <span className="rc-v2-badge" style={{ marginLeft: 6 }}>
+                  experimental
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {proto === "V2" && (
+        <p className="rc-dash-proto-note rcx-rise" style={{ ["--rcx-i" as string]: "105ms" }}>
+          The experimental V2 escrow is unaudited and not tracked by the
+          indexer — these receipts are read straight from chain logs. V2
+          settles USDC only.
+        </p>
+      )}
+
       {/* Status filter tabs */}
       <div
         className="rc-dash-chips rcx-rise"
@@ -163,7 +206,11 @@ export default function DashboardPage() {
           <div className="rc-dash-error rcx-rise" role="alert" title={`Technical detail: ${error}`}>
             <TapeEmpty
               headline="The tape is unreachable right now."
-              sub="The receipt service isn't responding. Check your connection, then try again — nothing here is cached or guessed."
+              sub={
+                proto === "V2"
+                  ? "The Arc RPC didn't answer the V2 log scan. V2 receipts are read straight from chain — check your connection, then try again. Nothing here is cached or guessed."
+                  : "The receipt service isn't responding. Check your connection, then try again — nothing here is cached or guessed."
+              }
               actionLabel="Try again"
               onAction={() => setReloadKey((k) => k + 1)}
             />
@@ -175,12 +222,16 @@ export default function DashboardPage() {
             <TapeEmpty
               headline={
                 filter === "ALL"
-                  ? "The tape starts with your first receipt."
+                  ? proto === "V2"
+                    ? "The experimental tier is empty."
+                    : "The tape starts with your first receipt."
                   : `No ${filter.toLowerCase()} receipts on the tape.`
               }
               sub={
                 filter === "ALL"
-                  ? "A receipt locks money against a signed delivery promise on Arc mainnet. Opening one takes about a minute."
+                  ? proto === "V2"
+                    ? "No receipts have been opened on the V2 escrow yet. V2 is experimental and unaudited — opening one is an opt-in."
+                    : "A receipt locks money against a signed delivery promise on Arc mainnet. Opening one takes about a minute."
                   : "Try another status, or look at everything at once."
               }
               actionLabel={filter === "ALL" ? "Open the first receipt" : "Show all receipts"}

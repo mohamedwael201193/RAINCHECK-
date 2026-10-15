@@ -1,0 +1,59 @@
+/* RAINCHECK FirstScreenTrust — compact trust strip directly below the hero.
+   Tokens: #0B1220 · #35E0FF · #F4EFE6. No serif anywhere. */
+
+.rc-fst {
+  background: #0b1220;
+  color: #f4feff;
+  padding: clamp(28px, 4vw, 48px) 24px;
+  border-bottom: 1px solid rgba(244, 254, 255, 0.08);
+}
+
+.rc-fst-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.rc-fst-eyebrow {
+  font-size: 0.74rem;
+  letter-spacing: 0.28em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #35e0ff;
+  margin: 0 0 18px;
+}
+
+.rc-fst-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 36px;
+}
+
+.rc-fst-item .rc-fst-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: rgba(244, 254, 255, 0.72);
+  max-width: 52ch;
+}
+
+.rc-fst-text strong {
+  color: #f4feff;
+  font-weight: 700;
+}
+
+.rc-fst-bullet {
+  display: block;
+  color: #35e0ff;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 760px) {
+  .rc-fst-list {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

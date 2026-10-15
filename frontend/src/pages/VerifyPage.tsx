@@ -13,6 +13,7 @@ import {
   type VerifyCheck,
   type VerifyReport,
 } from "../lib/verify";
+import { fetchNewestV2ReceiptForVerify } from "../lib/v2";
 import "../styles/app.css";
 import "./VerifyPage.css";
 
@@ -93,6 +94,9 @@ function CheckRow({ check }: { check: VerifyCheck }) {
 export default function VerifyPage() {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const verifyingRef = useRef(false);
+  // Which tier the "try with a live receipt" helper loads from.
+  // V2 loads straight from chain (the indexer doesn't track it).
+  const [liveProto, setLiveProto] = useState<"V1" | "V2">("V1");
 
   const {
     register,
@@ -148,7 +152,10 @@ export default function VerifyPage() {
     verifyingRef.current = true;
     setPhase({ kind: "loading-live" });
     try {
-      const { text, txHash } = await fetchNewestReceiptView();
+      const { text, txHash } =
+        liveProto === "V2"
+          ? await fetchNewestV2ReceiptForVerify()
+          : await fetchNewestReceiptView();
       setValue("receiptJson", text, { shouldValidate: true });
       if (txHash) setValue("txHash", txHash, { shouldValidate: true });
       clearErrors();
@@ -288,7 +295,40 @@ export default function VerifyPage() {
                 "Try with the newest live receipt"
               )}
             </button>
+            <span
+              className="rc-verify-proto"
+              role="radiogroup"
+              aria-label="Live receipt source"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={liveProto === "V1"}
+                className={liveProto === "V1" ? "is-on" : ""}
+                disabled={busy}
+                onClick={() => setLiveProto("V1")}
+              >
+                V1
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={liveProto === "V2"}
+                className={liveProto === "V2" ? "is-on" : ""}
+                disabled={busy}
+                onClick={() => setLiveProto("V2")}
+              >
+                V2 <span className="rc-v2-badge">experimental</span>
+              </button>
+            </span>
           </div>
+          {liveProto === "V2" && (
+            <p className="rc-muted" style={{ marginTop: 10 }}>
+              V2 receipts are loaded straight from chain (the indexer
+              doesn&apos;t track the experimental tier). The V2 escrow is
+              unaudited.
+            </p>
+          )}
 
           {phase.kind === "fatal" && (
             <p className="rc-fatal" role="alert">

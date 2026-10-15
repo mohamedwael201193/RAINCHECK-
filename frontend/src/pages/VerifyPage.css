@@ -476,3 +476,35 @@
     background: rgba(244, 254, 255, 0.08);
   }
 }
+
+/* ---------- Live receipt protocol toggle (V1 / V2 experimental) ---------- */
+.rc-verify-proto {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+.rc-verify-proto button {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 254, 255, 0.2);
+  background: transparent;
+  color: rgba(244, 254, 255, 0.65);
+  cursor: pointer;
+}
+.rc-verify-proto button.is-on {
+  border-color: #35e0ff;
+  color: #f4feff;
+  background: rgba(53, 224, 255, 0.1);
+}
+.rc-verify-proto button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.rc-verify-proto .rc-v2-badge {
+  margin-left: 6px;
+  padding: 2px 7px;
+}
